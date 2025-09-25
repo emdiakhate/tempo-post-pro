@@ -99,7 +99,7 @@ const PostCard: React.FC<PostCardProps> = ({
       {/* Campaign badge */}
       {post.campaign && (
         <Badge 
-          className="mb-2 text-xs" 
+          className="mb-2 text-[10px]" 
           style={{ backgroundColor: post.campaignColor, color: 'white' }}
         >
           {post.campaign}
@@ -110,7 +110,7 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Clock className="w-3 h-3 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-xs font-medium text-foreground">
             {formatTime(post.scheduledTime)}
           </span>
         </div>
@@ -138,11 +138,11 @@ const PostCard: React.FC<PostCardProps> = ({
         <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center">
           <span className="text-xs text-gray-600">👤</span>
         </div>
-        <span className="text-xs text-muted-foreground">{post.author}</span>
+        <span className="text-[10px] text-muted-foreground">{post.author}</span>
       </div>
 
       {/* Content */}
-      <p className="text-sm text-foreground mb-3 leading-relaxed">
+      <p className="text-xs text-foreground mb-3 leading-tight">
         {truncateContent(post.content)}
       </p>
 
@@ -155,7 +155,7 @@ const PostCard: React.FC<PostCardProps> = ({
             className="w-full h-24 object-cover"
           />
           {post.platforms.length > 1 && (
-            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
               +{post.platforms.length - 1}
             </div>
           )}
@@ -164,7 +164,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
       {/* Engagement stats */}
       {post.engagement && post.status === 'published' && (
-        <div className="flex items-center gap-3 mb-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 mb-3 text-[10px] text-muted-foreground">
           <span>👁 {post.engagement.views}</span>
           <span>❤️ {post.engagement.likes}</span>
           <span>💬 {post.engagement.comments}</span>
@@ -176,7 +176,7 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="flex items-center justify-between">
         <Badge 
           variant="outline" 
-          className={cn("text-xs", statusColors[post.status])}
+          className={cn("text-[10px]", statusColors[post.status])}
         >
           {statusLabels[post.status]}
         </Badge>
