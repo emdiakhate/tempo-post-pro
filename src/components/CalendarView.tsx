@@ -127,11 +127,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   return (
     <div className="flex-1 bg-background">
       <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-7 h-full">
+        <div className="grid grid-cols-7 h-full min-h-0">
           {weekDays.map((day) => (
             <div
               key={day.key}
-              className="border-r border-border last:border-r-0 flex flex-col min-h-0"
+              className="border-r border-border last:border-r-0 flex flex-col min-h-0 min-w-[180px]"
             >
               {/* Day header */}
               <div className="p-3 border-b border-border bg-card">
@@ -162,6 +162,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                       "flex-1 p-2 space-y-2 min-h-96 custom-scrollbar overflow-y-auto group",
                       snapshot.isDraggingOver && "bg-drop-zone-active/20 border-2 border-dashed border-primary/30"
                     )}
+                    style={{ gap: '8px' }}
                   >
                     {postsByDay[day.key]?.map((post, index) => (
                       <Draggable

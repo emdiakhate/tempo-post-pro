@@ -86,6 +86,10 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      spacing: {
+        '15': '3.75rem', // 60px for collapsed sidebar
+        '70': '17.5rem', // 280px for expanded sidebar
+      },
       keyframes: {
         "accordion-down": {
           from: {
