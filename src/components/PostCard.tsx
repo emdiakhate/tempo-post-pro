@@ -92,73 +92,10 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <div 
       className={cn(
-        "post-card group cursor-move w-[95%] mx-auto",
-        isDragging && "opacity-75 transform rotate-1 shadow-lg scale-105"
+        "bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-move",
+        isDragging && "opacity-75 transform rotate-1 shadow-lg"
       )}
     >
-      {/* Header row: Time, Platforms, Actions */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
-          {post.image && (
-            <img 
-              src={post.image} 
-              alt="Post preview" 
-              className="w-10 h-10 object-cover rounded flex-shrink-0"
-            />
-          )}
-          <div className="min-w-0">
-            <span className="text-xs font-medium text-foreground block">
-              {formatTime(post.scheduledTime)}
-            </span>
-            <div className="flex items-center gap-1 mt-0.5">
-              {post.platforms.map((platform) => {
-                const PlatformIcon = PlatformIcons[platform];
-                return (
-                  <div
-                    key={platform}
-                    className={cn(
-                      "w-4 h-4 rounded flex items-center justify-center",
-                      platformColors[platform]
-                    )}
-                  >
-                    <PlatformIcon />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        
-        {/* Actions overlay - visible on hover */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 flex-shrink-0">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-            onClick={() => onEdit?.(post)}
-          >
-            <Edit className="w-3 h-3" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-            onClick={() => onDuplicate?.(post)}
-          >
-            <Copy className="w-3 h-3" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-          >
-            <MoreHorizontal className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
-
       {/* Campaign badge */}
       {post.campaign && (
         <Badge 
@@ -169,12 +106,73 @@ const PostCard: React.FC<PostCardProps> = ({
         </Badge>
       )}
 
-      {/* Content - max 2 lines */}
-      <p className="text-xs text-foreground leading-tight line-clamp-2 mb-2">
-        {post.content}
+      {/* Time and platforms */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Clock className="w-3 h-3 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">
+            {formatTime(post.scheduledTime)}
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          {post.platforms.map((platform) => {
+            const PlatformIcon = PlatformIcons[platform];
+            return (
+              <div
+                key={platform}
+                className={cn(
+                  "w-6 h-6 rounded flex items-center justify-center",
+                  platformColors[platform]
+                )}
+              >
+                <PlatformIcon />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Author */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center">
+          <span className="text-xs text-gray-600">👤</span>
+        </div>
+        <span className="text-xs text-muted-foreground">{post.author}</span>
+      </div>
+
+      {/* Content */}
+      <p className="text-sm text-foreground mb-3 leading-relaxed">
+        {truncateContent(post.content)}
       </p>
 
-      {/* Bottom row: Status and engagement */}
+      {/* Image */}
+      {post.image && (
+        <div className="mb-3 rounded-md overflow-hidden">
+          <img 
+            src={post.image} 
+            alt="Post content" 
+            className="w-full h-24 object-cover"
+          />
+          {post.platforms.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+              +{post.platforms.length - 1}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Engagement stats */}
+      {post.engagement && post.status === 'published' && (
+        <div className="flex items-center gap-3 mb-3 text-xs text-muted-foreground">
+          <span>👁 {post.engagement.views}</span>
+          <span>❤️ {post.engagement.likes}</span>
+          <span>💬 {post.engagement.comments}</span>
+          <span>🔄 {post.engagement.shares}</span>
+        </div>
+      )}
+
+      {/* Status and actions */}
       <div className="flex items-center justify-between">
         <Badge 
           variant="outline" 
@@ -183,13 +181,43 @@ const PostCard: React.FC<PostCardProps> = ({
           {statusLabels[post.status]}
         </Badge>
 
-        {/* Engagement stats - only for published posts */}
-        {post.engagement && post.status === 'published' && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>👁 {post.engagement.views}</span>
-            <span>❤️ {post.engagement.likes}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 hover:bg-muted"
+            onClick={() => onEdit?.(post)}
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 hover:bg-muted"
+            onClick={() => onDuplicate?.(post)}
+          >
+            <Copy className="w-3 h-3" />
+          </Button>
+          
+          {post.status === 'published' && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0 hover:bg-muted"
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 hover:bg-muted"
+          >
+            <MoreHorizontal className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
     </div>
   );
