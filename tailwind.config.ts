@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -50,12 +51,34 @@ export default {
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          muted: "hsl(var(--sidebar-muted))",
+          border: "hsl(var(--sidebar-border))",
           accent: "hsl(var(--sidebar-accent))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        },
+        social: {
+          twitter: "hsl(var(--twitter))",
+          instagram: "hsl(var(--instagram))",
+          facebook: "hsl(var(--facebook))",
+          linkedin: "hsl(var(--linkedin))",
+          youtube: "hsl(var(--youtube))",
+          tiktok: "hsl(var(--tiktok))",
+        },
+        status: {
+          scheduled: "hsl(var(--status-scheduled))",
+          published: "hsl(var(--status-published))",
+          draft: "hsl(var(--status-draft))",
+          failed: "hsl(var(--status-failed))",
+          pending: "hsl(var(--status-pending))",
+        },
+        campaign: {
+          primary: "hsl(var(--campaign-primary))",
+          secondary: "hsl(var(--campaign-secondary))",
+        },
+        drop: {
+          zone: "hsl(var(--drop-zone))",
+          "zone-active": "hsl(var(--drop-zone-active))",
+          shadow: "hsl(var(--drag-shadow))",
         },
       },
       borderRadius: {
