@@ -121,16 +121,6 @@ const PostCard: React.FC<PostCardProps> = ({
       </div>
 
       <div className="px-3 flex-1 flex flex-col">
-        {/* Campaign badge */}
-        {post.campaign && (
-          <Badge 
-            className="mb-2 text-[10px] self-start" 
-            style={{ backgroundColor: post.campaignColor, color: 'white' }}
-          >
-            {post.campaign}
-          </Badge>
-        )}
-
         {/* Author */}
         <div className="flex items-center gap-2 mb-2">
           <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
