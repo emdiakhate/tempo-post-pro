@@ -92,28 +92,15 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <div 
       className={cn(
-        "bg-card border border-border rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-move",
+        "bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-move flex flex-col h-[200px]",
         isDragging && "opacity-75 transform rotate-1 shadow-lg"
       )}
     >
-      {/* Campaign badge */}
-      {post.campaign && (
-        <Badge 
-          className="mb-2 text-[10px]" 
-          style={{ backgroundColor: post.campaignColor, color: 'white' }}
-        >
-          {post.campaign}
-        </Badge>
-      )}
-
-      {/* Time and platforms */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Clock className="w-3 h-3 text-muted-foreground" />
-          <span className="text-xs font-medium text-foreground">
-            {formatTime(post.scheduledTime)}
-          </span>
-        </div>
+      {/* Header: Time and platforms */}
+      <div className="flex items-center justify-between p-3 pb-2">
+        <span className="text-xs font-medium text-foreground">
+          {formatTime(post.scheduledTime)}
+        </span>
         
         <div className="flex items-center gap-1">
           {post.platforms.map((platform) => {
@@ -122,7 +109,7 @@ const PostCard: React.FC<PostCardProps> = ({
               <div
                 key={platform}
                 className={cn(
-                  "w-6 h-6 rounded flex items-center justify-center",
+                  "w-5 h-5 rounded flex items-center justify-center",
                   platformColors[platform]
                 )}
               >
@@ -133,47 +120,61 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
 
-      {/* Author */}
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center">
-          <span className="text-xs text-gray-600">👤</span>
+      <div className="px-3 flex-1 flex flex-col">
+        {/* Campaign badge */}
+        {post.campaign && (
+          <Badge 
+            className="mb-2 text-[10px] self-start" 
+            style={{ backgroundColor: post.campaignColor, color: 'white' }}
+          >
+            {post.campaign}
+          </Badge>
+        )}
+
+        {/* Author */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-xs text-gray-600">👤</span>
+          </div>
+          <span className="text-[10px] text-muted-foreground truncate">{post.author}</span>
         </div>
-        <span className="text-[10px] text-muted-foreground">{post.author}</span>
-      </div>
 
-      {/* Content */}
-      <p className="text-xs text-foreground mb-3 leading-tight">
-        {truncateContent(post.content)}
-      </p>
+        {/* Content - exactly 2 lines */}
+        <p className="text-xs text-foreground mb-3 line-clamp-2 leading-tight flex-shrink-0">
+          {post.content}
+        </p>
 
-      {/* Image */}
-      {post.image && (
-        <div className="mb-3 rounded-md overflow-hidden">
-          <img 
-            src={post.image} 
-            alt="Post content" 
-            className="w-full h-24 object-cover"
-          />
-          {post.platforms.length > 1 && (
-            <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
-              +{post.platforms.length - 1}
+        {/* Image */}
+        <div className="flex-1 flex items-center justify-center mb-3">
+          {post.image && (
+            <div className="relative w-full max-w-[120px] h-[80px] rounded-md overflow-hidden flex-shrink-0">
+              <img 
+                src={post.image} 
+                alt="Post content" 
+                className="w-full h-full object-cover"
+              />
+              {post.platforms.length > 1 && (
+                <div className="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
+                  +{post.platforms.length - 1}
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
 
-      {/* Engagement stats */}
-      {post.engagement && post.status === 'published' && (
-        <div className="flex items-center gap-3 mb-3 text-[10px] text-muted-foreground">
-          <span>👁 {post.engagement.views}</span>
-          <span>❤️ {post.engagement.likes}</span>
-          <span>💬 {post.engagement.comments}</span>
-          <span>🔄 {post.engagement.shares}</span>
-        </div>
-      )}
+        {/* Engagement stats */}
+        {post.engagement && post.status === 'published' && (
+          <div className="flex items-center gap-3 mb-2 text-[10px] text-muted-foreground">
+            <span>👁 {post.engagement.views}</span>
+            <span>❤️ {post.engagement.likes}</span>
+            <span>💬 {post.engagement.comments}</span>
+            <span>🔄 {post.engagement.shares}</span>
+          </div>
+        )}
+      </div>
 
-      {/* Status and actions */}
-      <div className="flex items-center justify-between">
+      {/* Bottom section: Status and actions - always visible */}
+      <div className="flex items-center justify-between p-3 pt-2 border-t border-border/50 mt-auto">
         <Badge 
           variant="outline" 
           className={cn("text-[10px]", statusColors[post.status])}
@@ -186,9 +187,8 @@ const PostCard: React.FC<PostCardProps> = ({
             variant="ghost" 
             size="sm" 
             className="h-6 w-6 p-0 hover:bg-muted"
-            onClick={() => onEdit?.(post)}
           >
-            <Edit className="w-3 h-3" />
+            <MoreHorizontal className="w-3 h-3" />
           </Button>
           
           <Button 
@@ -198,6 +198,14 @@ const PostCard: React.FC<PostCardProps> = ({
             onClick={() => onDuplicate?.(post)}
           >
             <Copy className="w-3 h-3" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 hover:bg-muted"
+          >
+            <Calendar className="w-3 h-3" />
           </Button>
           
           {post.status === 'published' && (
@@ -214,8 +222,9 @@ const PostCard: React.FC<PostCardProps> = ({
             variant="ghost" 
             size="sm" 
             className="h-6 w-6 p-0 hover:bg-muted"
+            onClick={() => onEdit?.(post)}
           >
-            <MoreHorizontal className="w-3 h-3" />
+            <Edit className="w-3 h-3" />
           </Button>
         </div>
       </div>
