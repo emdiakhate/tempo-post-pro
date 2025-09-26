@@ -145,9 +145,9 @@ const PostCard: React.FC<PostCardProps> = ({
         </p>
 
         {/* Image */}
-        <div className="flex-1 flex items-center justify-center mb-3">
+        <div className="flex-1 mb-3">
           {post.image && (
-            <div className="relative w-full max-w-[120px] h-[80px] rounded-md overflow-hidden flex-shrink-0">
+            <div className="relative w-full h-[90px] rounded-md overflow-hidden">
               <img 
                 src={post.image} 
                 alt="Post content" 
