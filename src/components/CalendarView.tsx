@@ -262,65 +262,65 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
         {/* Calendar Grid */}
         <div className="flex-1 overflow-hidden">
-      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex h-full">
               {weekDays.map((day) => (
                 <div key={day.key} className="flex-1 border-r border-gray-200 flex flex-col min-w-0">
                   {/* Day Header */}
                   <div className="p-2 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div>
+                    <div className="flex items-center justify-between">
+                      <div>
                         <h3 className="font-medium text-xs text-gray-700">
-                      {day.name} {day.number}
-                    </h3>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                          {day.name} {day.number}
+                        </h3>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleCreatePost(day.key)}
                         className="h-5 w-5 p-0 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
 
                   {/* Posts Column */}
                   <Droppable droppableId={day.key}>
-                {(provided, snapshot) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className={cn(
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className={cn(
                           "flex-1 px-1 py-1 space-y-1 h-[calc(100vh-180px)] group",
                           snapshot.isDraggingOver && "bg-blue-50 border-2 border-dashed border-blue-300"
-                    )}
-                  >
-                    {postsByDay[day.key]?.map((post, index) => (
-                          <Draggable key={post.id} draggableId={post.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                                className="w-full"
-                          >
-                            <PostCard
-                              post={post}
-                              isDragging={snapshot.isDragging}
-                            />
-                          </div>
                         )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
+                      >
+                        {postsByDay[day.key]?.map((post, index) => (
+                          <Draggable key={post.id} draggableId={post.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="w-full"
+                              >
+                                <PostCard
+                                  post={post}
+                                  isDragging={snapshot.isDragging}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </DragDropContext>
+          </DragDropContext>
         </div>
       </div>
       

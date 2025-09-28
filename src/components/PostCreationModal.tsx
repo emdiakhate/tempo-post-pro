@@ -17,6 +17,14 @@ interface PostCreationModalProps {
   isEditing?: boolean;
 }
 
+// Configuration des webhooks IA
+const AI_WEBHOOKS = {
+  simple: 'https://malick000.app.n8n.cloud/webhook/ai-simple',
+  edit: 'https://malick000.app.n8n.cloud/webhook/ai-edit', 
+  combine: 'https://malick000.app.n8n.cloud/webhook/ai-combine',
+  ugc: 'https://malick000.app.n8n.cloud/webhook/ai-ugc'
+};
+
 const PostCreationModal: React.FC<PostCreationModalProps> = ({
   isOpen,
   onClose,
@@ -38,6 +46,14 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
   const [publishType, setPublishType] = useState<'now' | 'scheduled'>('now');
   const [scheduledDateTime, setScheduledDateTime] = useState<Date | null>(null);
 
+  // Nouveaux états pour la génération IA
+  const [mediaSource, setMediaSource] = useState<'upload' | 'ai'>('upload');
+  const [aiGenerationType, setAiGenerationType] = useState<'simple' | 'edit' | 'combine' | 'ugc'>('simple');
+  const [aiPrompt, setAiPrompt] = useState<string>('');
+  const [aiSourceImages, setAiSourceImages] = useState<string[]>([]);
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+
   const platforms = [
     { id: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
     { id: 'facebook', name: 'Facebook', color: 'bg-blue-600' },
@@ -45,6 +61,14 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     { id: 'linkedin', name: 'LinkedIn', color: 'bg-blue-700' },
     { id: 'youtube', name: 'YouTube', color: 'bg-red-600' },
     { id: 'tiktok', name: 'TikTok', color: 'bg-black' }
+  ];
+
+  // Types pour la génération IA
+  const aiGenerationTypes = [
+    { id: 'simple', name: 'Génération simple', description: 'Créer une image à partir d\'un prompt', requiresImages: 0 },
+    { id: 'edit', name: 'Édition d\'image', description: 'Modifier une image existante', requiresImages: 1 },
+    { id: 'combine', name: 'Combinaison', description: 'Combiner deux images', requiresImages: 2 },
+    { id: 'ugc', name: 'UGC', description: 'Contenu généré par utilisateur', requiresImages: 1 }
   ];
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

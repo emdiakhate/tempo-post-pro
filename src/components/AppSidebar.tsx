@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Calendar, 
   Edit3, 
@@ -11,12 +11,9 @@ import {
   Archive,
   Instagram,
   Rss,
-  AlertTriangle,
-  Menu,
-  X
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface SidebarItem {
   id: string;
@@ -42,39 +39,19 @@ const sidebarItems: SidebarItem[] = [
   { id: 'failed', label: 'Publications échouées', icon: AlertTriangle, count: 2 },
 ];
 
-interface AppSidebarProps {
-  isCollapsed: boolean;
-  onToggle: () => void;
-}
-
-const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed, onToggle }) => {
+const AppSidebar: React.FC = () => {
   return (
-    <div className={cn(
-      "sidebar bg-sidebar h-screen flex flex-col border-r border-sidebar-border transition-all duration-300 ease-in-out z-40",
-      isCollapsed ? "w-15" : "w-70"
-    )}>
+    <div className="w-64 bg-sidebar h-screen flex flex-col border-r border-sidebar-border">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">P</span>
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <h1 className="text-sidebar-foreground font-semibold text-sm truncate">Postelma</h1>
-                <p className="text-sidebar-foreground/70 text-xs">Publication</p>
-              </div>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
+            <span className="text-white font-bold text-sm">B</span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="h-8 w-8 p-0 text-sidebar-foreground hover:bg-sidebar-muted flex-shrink-0"
-          >
-            {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
-          </Button>
+          <div>
+            <h1 className="text-sidebar-foreground font-semibold text-sm">Boucherie Halal</h1>
+            <p className="text-sidebar-foreground/70 text-xs">Publication</p>
+          </div>
         </div>
       </div>
 
@@ -84,39 +61,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed, onToggle }) => {
           <button
             key={item.id}
             className={cn(
-              "w-full flex items-center rounded-md text-sm transition-colors mb-1 relative group",
-              isCollapsed ? "justify-center px-2 py-3" : "justify-between px-3 py-2.5",
+              "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-colors mb-1",
               item.active 
                 ? "bg-sidebar-muted text-sidebar-accent font-medium" 
                 : "text-sidebar-foreground hover:bg-sidebar-muted/50 hover:text-sidebar-foreground"
             )}
           >
-            <div className={cn(
-              "flex items-center",
-              isCollapsed ? "justify-center" : "gap-3"
-            )}>
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
+            <div className="flex items-center gap-3">
+              <item.icon className="w-4 h-4" />
+              <span className="truncate">{item.label}</span>
             </div>
-            
-            {!isCollapsed && item.count && (
-              <span className="bg-sidebar-muted text-sidebar-foreground text-xs px-2 py-0.5 rounded-full flex-shrink-0">
+            {item.count && (
+              <span className="bg-sidebar-muted text-sidebar-foreground text-xs px-2 py-0.5 rounded-full">
                 {item.count}
               </span>
-            )}
-            
-            {isCollapsed && item.count && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] h-4 flex items-center justify-center">
-                {item.count}
-              </span>
-            )}
-            
-            {/* Tooltip for collapsed state */}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                {item.label}
-                {item.count && <span className="ml-1">({item.count})</span>}
-              </div>
             )}
           </button>
         ))}
