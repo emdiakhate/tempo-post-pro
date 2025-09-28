@@ -1,8 +1,5 @@
 import React from 'react';
-import { MoreHorizontal, Eye, Edit, Copy, Trash2, Calendar, Clock } from 'lucide-react';
 import { Post, SocialPlatform } from '@/types/Post';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -50,36 +47,15 @@ const platformColors: Record<SocialPlatform, string> = {
   tiktok: 'bg-black text-white',
 };
 
-const statusColors = {
-  scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
-  published: 'bg-green-100 text-green-800 border-green-200',
-  draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  failed: 'bg-red-100 text-red-800 border-red-200',
-  pending: 'bg-orange-100 text-orange-800 border-orange-200',
-};
-
-const statusLabels = {
-  scheduled: 'Programmé',
-  published: 'Publié',
-  draft: 'Brouillon',
-  failed: 'Échoué',
-  pending: 'En attente',
-};
 
 interface PostCardProps {
   post: Post;
   isDragging?: boolean;
-  onEdit?: (post: Post) => void;
-  onDuplicate?: (post: Post) => void;
-  onDelete?: (post: Post) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({ 
   post, 
-  isDragging = false,
-  onEdit,
-  onDuplicate,
-  onDelete 
+  isDragging = false
 }) => {
   const formatTime = (date: Date) => {
     return format(date, 'HH:mm', { locale: fr });
@@ -92,105 +68,77 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <div 
       className={cn(
-        "post-card group cursor-move w-[95%] mx-auto",
-        isDragging && "opacity-75 transform rotate-1 shadow-lg scale-105"
+        "bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-move flex flex-col h-[180px] w-full",
+        isDragging && "opacity-75 transform rotate-1 shadow-lg"
       )}
     >
-      {/* Header row: Time, Platforms, Actions */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
-          {post.image && (
-            <img 
-              src={post.image} 
-              alt="Post preview" 
-              className="w-10 h-10 object-cover rounded flex-shrink-0"
-            />
-          )}
-          <div className="min-w-0">
-            <span className="text-xs font-medium text-foreground block">
-              {formatTime(post.scheduledTime)}
-            </span>
-            <div className="flex items-center gap-1 mt-0.5">
-              {post.platforms.map((platform) => {
-                const PlatformIcon = PlatformIcons[platform];
-                return (
-                  <div
-                    key={platform}
-                    className={cn(
-                      "w-4 h-4 rounded flex items-center justify-center",
-                      platformColors[platform]
-                    )}
-                  >
-                    <PlatformIcon />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      {/* Header: Time and platforms */}
+      <div className="flex items-center justify-between p-2 pb-1">
+        <span className="text-xs font-medium text-foreground">
+          {formatTime(post.scheduledTime)}
+        </span>
         
-        {/* Actions overlay - visible on hover */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 flex-shrink-0">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-            onClick={() => onEdit?.(post)}
-          >
-            <Edit className="w-3 h-3" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-            onClick={() => onDuplicate?.(post)}
-          >
-            <Copy className="w-3 h-3" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 hover:bg-muted"
-          >
-            <MoreHorizontal className="w-3 h-3" />
-          </Button>
+        <div className="flex items-center gap-1">
+          {post.platforms.map((platform) => {
+            const PlatformIcon = PlatformIcons[platform];
+            return (
+              <div
+                key={platform}
+                className={cn(
+                  "w-5 h-5 rounded flex items-center justify-center",
+                  platformColors[platform]
+                )}
+              >
+                <PlatformIcon />
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Campaign badge */}
-      {post.campaign && (
-        <Badge 
-          className="mb-2 text-xs" 
-          style={{ backgroundColor: post.campaignColor, color: 'white' }}
-        >
-          {post.campaign}
-        </Badge>
-      )}
+      <div className="px-2 flex-1 flex flex-col">
+        {/* Author */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-xs text-gray-600">👤</span>
+          </div>
+          <span className="text-[10px] text-muted-foreground truncate">{post.author}</span>
+        </div>
 
-      {/* Content - max 2 lines */}
-      <p className="text-xs text-foreground leading-tight line-clamp-2 mb-2">
-        {post.content}
-      </p>
+        {/* Content - exactly 2 lines */}
+        <p className="text-xs text-foreground mb-3 line-clamp-2 leading-tight flex-shrink-0">
+          {post.content}
+        </p>
 
-      {/* Bottom row: Status and engagement */}
-      <div className="flex items-center justify-between">
-        <Badge 
-          variant="outline" 
-          className={cn("text-xs", statusColors[post.status])}
-        >
-          {statusLabels[post.status]}
-        </Badge>
+        {/* Image */}
+        <div className="mb-3 max-h-[70px] overflow-hidden">
+          {post.image && (
+            <div className="relative w-full h-[70px] rounded-md overflow-hidden bg-muted">
+              <img 
+                src={post.image} 
+                alt="Post content" 
+                className="w-full h-full object-cover"
+              />
+              {post.platforms.length > 1 && (
+                <div className="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
+                  +{post.platforms.length - 1}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-        {/* Engagement stats - only for published posts */}
+        {/* Engagement stats */}
         {post.engagement && post.status === 'published' && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 mb-2 text-[10px] text-muted-foreground">
             <span>👁 {post.engagement.views}</span>
             <span>❤️ {post.engagement.likes}</span>
+            <span>💬 {post.engagement.comments}</span>
+            <span>🔄 {post.engagement.shares}</span>
           </div>
         )}
       </div>
+
     </div>
   );
 };

@@ -38,7 +38,7 @@ export const samplePosts: Post[] = [
     campaign: 'Campagne Été 2024',
     campaignColor: '#3B82F6',
     author: 'Mohammed Boucherie',
-    dayColumn: 'sunday',
+    dayColumn: 'dimanche',
     timeSlot: 0,
   },
   {
@@ -49,7 +49,7 @@ export const samplePosts: Post[] = [
     status: 'scheduled',
     image: lambChops,
     author: 'Fatima Halal',
-    dayColumn: 'monday',
+    dayColumn: 'lundi',
     timeSlot: 0,
   },
   {
@@ -62,7 +62,7 @@ export const samplePosts: Post[] = [
     campaign: 'Spécial Ramadan',
     campaignColor: '#10B981',
     author: 'Ahmed Boucherie',
-    dayColumn: 'tuesday',
+    dayColumn: 'mardi',
     timeSlot: 0,
   },
   {
@@ -72,7 +72,7 @@ export const samplePosts: Post[] = [
     platforms: ['facebook'],
     status: 'scheduled',
     author: 'Boucherie Halal',
-    dayColumn: 'wednesday',
+    dayColumn: 'mercredi',
     timeSlot: 0,
   },
   {
@@ -85,7 +85,7 @@ export const samplePosts: Post[] = [
     campaign: 'Campagne Été 2024',
     campaignColor: '#3B82F6',
     author: 'Youssef Video',
-    dayColumn: 'thursday',
+    dayColumn: 'jeudi',
     timeSlot: 0,
   },
   {
@@ -96,7 +96,7 @@ export const samplePosts: Post[] = [
     status: 'scheduled',
     image: halalChicken,
     author: 'Boucherie Halal',
-    dayColumn: 'friday',
+    dayColumn: 'vendredi',
     timeSlot: 0,
   },
   // Second row posts
@@ -110,7 +110,7 @@ export const samplePosts: Post[] = [
     campaign: 'Campagne Été 2024',
     campaignColor: '#3B82F6',
     author: 'Social Media',
-    dayColumn: 'monday',
+    dayColumn: 'lundi',
     timeSlot: 1,
   },
   {
@@ -121,7 +121,7 @@ export const samplePosts: Post[] = [
     status: 'scheduled',
     image: butcherShopInterior,
     author: 'Community Manager',
-    dayColumn: 'tuesday',
+    dayColumn: 'mardi',
     timeSlot: 1,
   },
   {
@@ -134,7 +134,7 @@ export const samplePosts: Post[] = [
     campaign: 'Célébration Aïd',
     campaignColor: '#F59E0B',
     author: 'Direction',
-    dayColumn: 'wednesday',
+    dayColumn: 'mercredi',
     timeSlot: 1,
   },
   {
@@ -144,7 +144,7 @@ export const samplePosts: Post[] = [
     platforms: ['twitter', 'linkedin'],
     status: 'scheduled',
     author: 'Service Client',
-    dayColumn: 'thursday',
+    dayColumn: 'jeudi',
     timeSlot: 1,
   },
   {
@@ -163,7 +163,7 @@ export const samplePosts: Post[] = [
       shares: 12,
       views: 1520
     },
-    dayColumn: 'friday',
+    dayColumn: 'vendredi',
     timeSlot: 1,
   },
   // Third row posts
@@ -175,7 +175,7 @@ export const samplePosts: Post[] = [
     status: 'scheduled',
     image: lambChops,
     author: 'Chef Cuisinier',
-    dayColumn: 'monday',
+    dayColumn: 'lundi',
     timeSlot: 2,
   }
 ];

@@ -12,6 +12,7 @@ export interface Post {
   campaign?: string;
   campaignColor?: string;
   author: string;
+  captions?: { [key: string]: string }; // Captions générées par IA pour chaque plateforme
   engagement?: {
     likes: number;
     comments: number;
