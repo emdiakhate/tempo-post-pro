@@ -122,6 +122,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     setEditingPost(null);
   };
 
+
+
   const sidebarItems = [
     { id: 'publishing', label: 'Publication', icon: Edit3, active: true },
     { id: 'calendar', label: 'Calendrier', icon: Calendar },
@@ -152,10 +154,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="p-4 border-b border-gray-600">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">B</span>
+              <span className="text-white font-bold text-sm">P</span>
             </div>
             {!sidebarCollapsed && (
-              <span className="text-lg font-semibold">Boucherie Halal</span>
+              <span className="text-lg font-semibold">Postelma</span>
             )}
           </div>
         </div>

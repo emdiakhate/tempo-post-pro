@@ -75,21 +75,21 @@ const PostCard: React.FC<PostCardProps> = ({
       {/* Header: Time and platforms */}
       <div className="flex items-center justify-between p-2 pb-1">
         <span className="text-xs font-medium text-foreground">
-          {formatTime(post.scheduledTime)}
-        </span>
+            {formatTime(post.scheduledTime)}
+          </span>
         
         <div className="flex items-center gap-1">
           {post.platforms.map((platform) => {
             const PlatformIcon = PlatformIcons[platform];
             return (
-              <div
+                <div
                 key={platform}
-                className={cn(
+                  className={cn(
                   "w-5 h-5 rounded flex items-center justify-center",
-                  platformColors[platform]
-                )}
-              >
-                <PlatformIcon />
+                    platformColors[platform]
+                  )}
+                >
+                  <PlatformIcon />
               </div>
             );
           })}
@@ -135,7 +135,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <span>❤️ {post.engagement.likes}</span>
             <span>💬 {post.engagement.comments}</span>
             <span>🔄 {post.engagement.shares}</span>
-          </div>
+        </div>
         )}
       </div>
     </div>

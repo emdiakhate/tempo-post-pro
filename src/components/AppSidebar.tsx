@@ -46,10 +46,10 @@ const AppSidebar: React.FC = () => {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-sm">B</span>
+            <span className="text-white font-bold text-sm">P</span>
           </div>
           <div>
-            <h1 className="text-sidebar-foreground font-semibold text-sm">Boucherie Halal</h1>
+            <h1 className="text-sidebar-foreground font-semibold text-sm">Postelma</h1>
             <p className="text-sidebar-foreground/70 text-xs">Publication</p>
           </div>
         </div>
