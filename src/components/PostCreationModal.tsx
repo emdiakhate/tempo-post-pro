@@ -76,15 +76,15 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     if (files) {
       const newImages: string[] = [];
       Array.from(files).slice(0, 4 - selectedImages.length).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
           newImages.push(e.target?.result as string);
           if (newImages.length === Math.min(files.length, 4 - selectedImages.length)) {
             setSelectedImages(prev => [...prev, ...newImages]);
             setSelectedImage(newImages[0] || null);
           }
-        };
-        reader.readAsDataURL(file);
+      };
+      reader.readAsDataURL(file);
       });
     }
   };
@@ -168,23 +168,40 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
           onClose();
         }
       } else {
-        // Publication programmée - ajout au calendrier
-        const scheduledPost = {
-          id: isEditing ? initialData?.id : `post-${Date.now()}`,
-          content: generatedCaptions[selectedPlatforms[0]] || content,
+        // Publication programmée via N8N avec date
+        const publishData = {
+          captions: generatedCaptions,
           platforms: selectedPlatforms,
-          image: selectedImages[0],
-          scheduledTime: scheduledDateTime,
-          dayColumn: scheduledDateTime ? format(scheduledDateTime, 'EEEE', { locale: fr }).toLowerCase() : selectedDay || 'monday',
-          timeSlot: scheduledDateTime ? calculateTimeSlot(scheduledDateTime) : 0,
-          status: 'scheduled',
-          captions: generatedCaptions
+          images: selectedImages,
+          type: 'scheduled',
+          scheduledDateTime: scheduledDateTime?.toISOString()
         };
 
-        // Callback pour ajouter au calendrier
-        onSave(scheduledPost);
-        alert('Post programmé avec succès !');
-        onClose();
+        const response = await fetch('https://malick000.app.n8n.cloud/webhook/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(publishData),
+        });
+
+        if (response.ok) {
+          // Ajout au calendrier local aussi
+          const scheduledPost = {
+            id: isEditing ? initialData?.id : `post-${Date.now()}`,
+            content: generatedCaptions[selectedPlatforms[0]] || content,
+            platforms: selectedPlatforms,
+            image: selectedImages[0],
+            scheduledTime: scheduledDateTime,
+            dayColumn: scheduledDateTime ? format(scheduledDateTime, 'EEEE', { locale: fr }).toLowerCase() : selectedDay || 'monday',
+            timeSlot: scheduledDateTime ? calculateTimeSlot(scheduledDateTime) : 0,
+            status: 'scheduled',
+            captions: generatedCaptions
+          };
+
+          // Callback pour ajouter au calendrier
+          onSave(scheduledPost);
+          alert('Post programmé avec succès !');
+          onClose();
+        }
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -391,13 +408,13 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
               <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
                 multiple
-                className="hidden"
-                id="image-upload"
-              />
+                  className="hidden"
+                  id="image-upload"
+                />
               <label htmlFor="image-upload" className="cursor-pointer block">
                 {selectedImages.length > 0 ? (
                   <div className="grid grid-cols-2 gap-2">
@@ -430,8 +447,8 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
                     <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-600">Cliquer pour ajouter des images</p>
                     <p className="text-xs text-gray-500">Jusqu'à 4 images</p>
-                  </div>
-                )}
+                </div>
+              )}
               </label>
             </div>
           </div>
@@ -465,10 +482,10 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Campagne (optionnel)</label>
-              <Input 
+              <Input
                 value={campaign}
                 onChange={(e) => setCampaign(e.target.value)}
-                placeholder="Nom de la campagne" 
+                placeholder="Nom de la campagne"
               />
             </div>
           </div>
@@ -559,9 +576,9 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
                   className="w-full"
                 >
                   Régénérer les captions
-                </Button>
+            </Button>
                 
-                <Button 
+            <Button 
                   onClick={publishPosts}
                   disabled={
                     selectedPlatforms.length === 0 || 
@@ -582,7 +599,7 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
                   ) : (
                     publishType === 'now' ? 'Publier maintenant' : 'Programmer la publication'
                   )}
-                </Button>
+            </Button>
               </div>
             )}
           </div>
