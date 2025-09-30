@@ -3,6 +3,7 @@ import { Post, SocialPlatform } from '@/types/Post';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Eye, Edit, Copy, Trash2 } from 'lucide-react';
 
 // Platform icons mapping
 const PlatformIcons = {
@@ -51,11 +52,19 @@ const platformColors: Record<SocialPlatform, string> = {
 interface PostCardProps {
   post: Post;
   isDragging?: boolean;
+  onPreview?: (post: Post) => void;
+  onEdit?: (post: Post) => void;
+  onDuplicate?: (post: Post) => void;
+  onDelete?: (post: Post) => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({ 
   post, 
-  isDragging = false
+  isDragging = false,
+  onPreview,
+  onEdit,
+  onDuplicate,
+  onDelete
 }) => {
   const formatTime = (date: Date) => {
     return format(date, 'HH:mm', { locale: fr });
@@ -111,7 +120,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </p>
 
         {/* Image */}
-        <div className="mb-3 max-h-[70px] overflow-hidden">
+        <div className="mb-2 max-h-[70px] overflow-hidden">
           {post.image && (
             <div className="relative w-full h-[70px] rounded-md overflow-hidden bg-muted">
               <img 
@@ -126,6 +135,52 @@ const PostCard: React.FC<PostCardProps> = ({
               )}
             </div>
           )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview?.(post);
+            }}
+            className="p-1.5 rounded hover:bg-blue-100 hover:text-blue-600 transition-colors"
+            title="Aperçu"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.(post);
+            }}
+            className="p-1.5 rounded hover:bg-green-100 hover:text-green-600 transition-colors"
+            title="Éditer"
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate?.(post);
+            }}
+            className="p-1.5 rounded hover:bg-orange-100 hover:text-orange-600 transition-colors"
+            title="Dupliquer"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm('Êtes-vous sûr de vouloir supprimer ce post ?')) {
+                onDelete?.(post);
+              }
+            }}
+            className="p-1.5 rounded hover:bg-red-100 hover:text-red-600 transition-colors"
+            title="Supprimer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Engagement stats */}

@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Post } from '@/types/Post';
 import PostCard from './PostCard';
 import PostCreationModal from './PostCreationModal';
+import PostPreviewModal from './PostPreviewModal';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit3, Calendar, Clock, FileText, CheckCircle, XCircle, Megaphone, Search, Archive, Instagram, Rss, AlertTriangle, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, startOfWeek } from 'date-fns';
@@ -27,6 +28,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDayForPost, setSelectedDayForPost] = useState<string>('');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [previewingPost, setPreviewingPost] = useState<Post | null>(null);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -120,6 +122,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     const newPosts = posts.map(p => p.id === updatedPost.id ? updatedPost : p);
     onPostsChange(newPosts);
     setEditingPost(null);
+  };
+
+  const handlePreview = (post: Post) => {
+    setPreviewingPost(post);
+  };
+
+  const handleEdit = (post: Post) => {
+    setEditingPost(post);
+  };
+
+  const handleDuplicate = (post: Post) => {
+    const duplicatedPost: Post = {
+      ...post,
+      id: `post-${Date.now()}`,
+      status: 'draft' as const,
+    };
+    onPostsChange([...posts, duplicatedPost]);
+  };
+
+  const handleDelete = (post: Post) => {
+    const newPosts = posts.filter(p => p.id !== post.id);
+    onPostsChange(newPosts);
   };
 
 
@@ -310,6 +334,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 <PostCard
                                   post={post}
                                   isDragging={snapshot.isDragging}
+                                  onPreview={handlePreview}
+                                  onEdit={handleEdit}
+                                  onDuplicate={handleDuplicate}
+                                  onDelete={handleDelete}
                                 />
                               </div>
                             )}
@@ -344,6 +372,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           onSave={handleUpdatePost}
           initialData={editingPost}
           isEditing={true}
+        />
+      )}
+
+      {/* Post Preview Modal */}
+      {previewingPost && (
+        <PostPreviewModal
+          post={previewingPost}
+          isOpen={true}
+          onClose={() => setPreviewingPost(null)}
         />
       )}
     </div>
