@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { X, Upload, Image as ImageIcon, Calendar, Clock } from 'lucide-react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
+import { X, Upload, Image as ImageIcon, Calendar, Clock, TrendingUp, Lightbulb, Hash, Copy, Plus, Briefcase, Smile, Zap, DollarSign, BookOpen, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { FacebookPreview, TwitterPreview, InstagramPreview, LinkedInPreview, TikTokPreview, YouTubePreview } from './PreviewModal';
+import { useBestTime, useEngagementChart } from '@/hooks/useBestTime';
+import { useHashtagSuggestions, useHashtagSets } from '@/hooks/useHashtagStats';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface PostCreationModalProps {
   isOpen: boolean;
@@ -25,6 +29,149 @@ const AI_WEBHOOKS = {
   combine: 'https://malick000.app.n8n.cloud/webhook/ai-combine',
   ugc: 'https://malick000.app.n8n.cloud/webhook/ai-ugc'
 };
+
+// Sous-composant mémorisé pour la sélection des plateformes
+// Évite les re-rendus inutiles lors des changements d'autres états
+const PlatformSelector = memo<{
+  selectedPlatforms: string[];
+  onPlatformChange: (platforms: string[]) => void;
+}>(({ selectedPlatforms, onPlatformChange }) => {
+  const platforms = [
+    { id: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'facebook', name: 'Facebook', color: 'bg-blue-600' },
+    { id: 'twitter', name: 'X (Twitter)', color: 'bg-black' },
+    { id: 'linkedin', name: 'LinkedIn', color: 'bg-blue-700' },
+    { id: 'youtube', name: 'YouTube', color: 'bg-red-600' },
+    { id: 'tiktok', name: 'TikTok', color: 'bg-black' },
+  ];
+
+  const handlePlatformToggle = (platformId: string) => {
+    if (selectedPlatforms.includes(platformId)) {
+      onPlatformChange(selectedPlatforms.filter(p => p !== platformId));
+    } else {
+      onPlatformChange([...selectedPlatforms, platformId]);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium">Plateformes</label>
+      <div className="flex flex-wrap gap-2">
+        {platforms.map((platform) => (
+          <button
+            key={platform.id}
+            onClick={() => handlePlatformToggle(platform.id)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium text-white transition-all",
+              platform.color,
+              selectedPlatforms.includes(platform.id) 
+                ? "ring-2 ring-offset-2 ring-blue-500" 
+                : "opacity-70 hover:opacity-100"
+            )}
+          >
+            {platform.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+// Sous-composant mémorisé pour la section d'aperçu
+// Optimise les performances de l'aperçu qui se re-rend souvent
+const PreviewSection = memo<{
+  selectedPlatforms: string[];
+  activePreview: string;
+  onPreviewChange: (platform: string) => void;
+  content: string;
+  selectedImages: string[];
+  generatedCaptions: any;
+}>(({ selectedPlatforms, activePreview, onPreviewChange, content, selectedImages, generatedCaptions }) => {
+  const platforms = [
+    { id: 'instagram', name: 'Instagram' },
+    { id: 'facebook', name: 'Facebook' },
+    { id: 'twitter', name: 'X' },
+    { id: 'linkedin', name: 'LinkedIn' },
+    { id: 'youtube', name: 'YouTube' },
+    { id: 'tiktok', name: 'TikTok' },
+  ];
+
+  const renderPreview = () => {
+    const currentCaption = generatedCaptions?.[activePreview as keyof typeof generatedCaptions];
+    const displayContent = currentCaption || content || 'Votre contenu apparaîtra ici...';
+    const profilePicture = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face';
+    
+    const previewProps = {
+      content: displayContent,
+      image: selectedImages[0] || '',
+      author: 'Postelma',
+      profilePicture,
+      timestamp: '2h'
+    };
+
+    switch (activePreview) {
+      case 'facebook':
+        return <FacebookPreview {...previewProps} />;
+      case 'twitter':
+        return <TwitterPreview {...previewProps} />;
+      case 'instagram':
+        return <InstagramPreview {...previewProps} />;
+      case 'linkedin':
+        return <LinkedInPreview {...previewProps} />;
+      case 'tiktok':
+        return <TikTokPreview {...previewProps} />;
+      case 'youtube':
+        return <YouTubePreview {...previewProps} />;
+      default:
+        return <InstagramPreview {...previewProps} />;
+    }
+  };
+
+  return (
+    <div className="w-1/2 bg-gray-50 p-6 border-l">
+      <h3 className="text-lg font-semibold mb-4">Aperçu</h3>
+      
+      {/* Platform Tabs */}
+      {selectedPlatforms.length > 0 && (
+        <div className="mb-4">
+          <div className="flex gap-2">
+            {platforms
+              .filter(p => selectedPlatforms.includes(p.id))
+              .map((platform) => (
+                <Button
+                  key={platform.id}
+                  variant={activePreview === platform.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => onPreviewChange(platform.id)}
+                  className={cn(
+                    "text-xs flex-1 relative"
+                  )}
+                >
+                  {platform.name}
+                  {generatedCaptions?.[platform.id as keyof typeof generatedCaptions] && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
+                  )}
+                </Button>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Preview Content */}
+      {selectedPlatforms.length > 0 ? (
+        <div className="h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="scale-[0.9] origin-top-left">
+            {renderPreview()}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center text-gray-500 py-8">
+          <p>Sélectionnez au moins une plateforme pour voir l'aperçu</p>
+        </div>
+      )}
+    </div>
+  );
+});
 
 const PostCreationModal: React.FC<PostCreationModalProps> = ({
   isOpen,
@@ -55,6 +202,67 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
+  // Hooks pour l'analyse des meilleurs moments
+  const bestTimeRecommendation = useBestTime(selectedPlatforms[0] as any, []);
+  const engagementChartData = useEngagementChart(selectedPlatforms[0] as any, []);
+
+  // Hooks pour les hashtags
+  const hashtagSuggestions = useHashtagSuggestions(content, selectedPlatforms[0] as any, []);
+  const { hashtagSets } = useHashtagSets();
+  
+  // États pour les hashtags
+  const [showHashtagSuggestions, setShowHashtagSuggestions] = useState(false);
+  const [selectedHashtagSet, setSelectedHashtagSet] = useState<string>('');
+
+  // États pour le tone de voix
+  const [selectedTone, setSelectedTone] = useState<string>('automatic');
+
+  // Configuration des tones de voix
+  const toneOptions = [
+    { 
+      id: 'professional', 
+      label: '💼 Professionnel', 
+      description: 'Formel et expert',
+      icon: Briefcase,
+      color: 'text-blue-600'
+    },
+    { 
+      id: 'casual', 
+      label: '😊 Décontracté', 
+      description: 'Décontracté et amical',
+      icon: Smile,
+      color: 'text-green-600'
+    },
+    { 
+      id: 'inspiring', 
+      label: '⚡ Inspirant', 
+      description: 'Motivant et énergique',
+      icon: Zap,
+      color: 'text-yellow-600'
+    },
+    { 
+      id: 'sales', 
+      label: '💰 Vendeur', 
+      description: 'Persuasif et commercial',
+      icon: DollarSign,
+      color: 'text-red-600'
+    },
+    { 
+      id: 'storytelling', 
+      label: '📖 Storytelling', 
+      description: 'Narratif et captivant',
+      icon: BookOpen,
+      color: 'text-purple-600'
+    },
+    { 
+      id: 'automatic', 
+      label: '🎭 Automatique', 
+      description: 'Laisse l\'IA choisir',
+      icon: Sparkles,
+      color: 'text-gray-600'
+    }
+  ];
+
   const platforms = [
     { id: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
     { id: 'facebook', name: 'Facebook', color: 'bg-blue-600' },
@@ -72,7 +280,8 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     { id: 'ugc', name: 'UGC', description: 'Contenu généré par utilisateur', requiresImages: 1 }
   ];
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Callbacks optimisés avec useCallback pour éviter les re-rendus inutiles
+  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
       const newImages: string[] = [];
@@ -88,16 +297,56 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
       reader.readAsDataURL(file);
       });
     }
-  };
+  }, [selectedImages.length]);
 
-  const removeImage = (index: number) => {
+  const removeImage = useCallback((index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
     if (selectedImages.length > 1) {
       setSelectedImage(selectedImages[index === 0 ? 1 : 0] || null);
     } else {
       setSelectedImage(null);
     }
-  };
+  }, [selectedImages]);
+
+  // Callbacks optimisés pour les plateformes et l'aperçu
+  const handlePlatformChange = useCallback((platforms: string[]) => {
+    setSelectedPlatforms(platforms);
+    // Mettre à jour l'aperçu actif si la plateforme sélectionnée n'est plus disponible
+    if (platforms.length > 0 && !platforms.includes(activePreview)) {
+      setActivePreview(platforms[0]);
+    }
+  }, [activePreview]);
+
+  const handlePreviewChange = useCallback((platform: string) => {
+    setActivePreview(platform);
+  }, []);
+
+  // Fonctions pour les meilleurs moments
+  const handleUseBestTime = useCallback((date: Date) => {
+    setScheduledDateTime(date);
+  }, []);
+
+  const handleUseAlternativeTime = useCallback((date: Date) => {
+    setScheduledDateTime(date);
+  }, []);
+
+  // Fonctions pour les hashtags
+  const handleAddHashtag = useCallback((hashtag: string) => {
+    const hashtagWithHash = hashtag.startsWith('#') ? hashtag : `#${hashtag}`;
+    setContent(prev => prev + (prev.endsWith(' ') ? '' : ' ') + hashtagWithHash + ' ');
+  }, []);
+
+  const handleUseHashtagSet = useCallback((setId: string) => {
+    const selectedSet = hashtagSets.find(set => set.id === setId);
+    if (selectedSet) {
+      const hashtagsString = selectedSet.hashtags.join(' ');
+      setContent(prev => prev + (prev.endsWith(' ') ? '' : ' ') + hashtagsString + ' ');
+    }
+  }, [hashtagSets]);
+
+  const handleCopyHashtag = useCallback((hashtag: string) => {
+    navigator.clipboard.writeText(hashtag);
+  }, []);
 
   // Fonctions pour la génération IA
   const handleAiSourceImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,19 +445,23 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     setIsGeneratingCaptions(true);
     
     try {
-      const formData = new FormData();
-      formData.append('content', content);
-      
-      if (selectedImages.length > 0) {
-        formData.append('media', JSON.stringify(selectedImages.map(img => ({
-          data: img,
-          type: 'image/jpeg'
-        }))));
-      }
+      // Préparer le payload avec le tone de voix
+      const payload = {
+        prompt: content,
+        tone: selectedTone,
+        platform: selectedPlatforms[0] || 'instagram',
+        context: {
+          product: campaign || 'Postelma',
+          target: 'audience générale'
+        }
+      };
 
       const response = await fetch('https://malick000.app.n8n.cloud/webhook/postelma', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
@@ -454,7 +707,7 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
                     }
                     className="min-h-20"
                   />
-                </div>
+          </div>
 
                 {/* Upload d'images sources pour édition/combinaison */}
                 {(aiGenerationType === 'edit' || aiGenerationType === 'combine' || aiGenerationType === 'ugc') && (
@@ -545,34 +798,247 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
                             </span>
                           </button>
                         </div>
-                      ))}
-                    </div>
+              ))}
+            </div>
                   </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Plateformes - DÉPLACÉ ICI */}
+          {/* Plateformes - Composant mémorisé */}
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-3">Plateformes</label>
-            <div className="flex flex-wrap gap-2">
-              {platforms.map((platform) => (
-                <Button
-                  key={platform.id}
-                  variant={selectedPlatforms.includes(platform.id) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => togglePlatform(platform.id)}
-                  className={cn(
-                    "text-xs",
-                    selectedPlatforms.includes(platform.id) && platform.color
-                  )}
-                >
-                  {platform.name}
-                </Button>
-              ))}
-            </div>
+            <PlatformSelector 
+              selectedPlatforms={selectedPlatforms}
+              onPlatformChange={handlePlatformChange}
+            />
           </div>
+
+          {/* Meilleurs moments - Affiché seulement si une plateforme est sélectionnée */}
+          {selectedPlatforms.length > 0 && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="w-5 h-5 text-blue-600" />
+                <h3 className="font-semibold text-gray-900">💡 Meilleur moment</h3>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Recommandé
+                </Badge>
+              </div>
+              
+              <div className="space-y-3">
+                {/* Moment recommandé */}
+                {bestTimeRecommendation ? (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {format(bestTimeRecommendation.recommended, 'EEEE dd/MM à HH:mm', { locale: fr })}
+                        </p>
+                        <p className="text-sm text-gray-600">{bestTimeRecommendation.reason}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUseBestTime(bestTimeRecommendation.recommended)}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      Utiliser ce créneau
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-green-600" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Mardi 15/01 à 18:00
+                        </p>
+                        <p className="text-sm text-gray-600">Moment optimal général pour {selectedPlatforms[0]}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        const defaultDate = new Date();
+                        defaultDate.setDate(defaultDate.getDate() + 1);
+                        defaultDate.setHours(18, 0, 0, 0);
+                        handleUseBestTime(defaultDate);
+                      }}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      Utiliser ce créneau
+                    </Button>
+            </div>
+                )}
+            
+                {/* Alternatives */}
+                {bestTimeRecommendation ? (
+                  bestTimeRecommendation.alternatives.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Ou essayez :</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {bestTimeRecommendation.alternatives.map((alt, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUseAlternativeTime(alt)}
+                            className="text-xs border-yellow-200 text-yellow-800 hover:bg-yellow-50"
+                          >
+                            {format(alt, 'EEEE HH:mm', { locale: fr })}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">Ou essayez :</p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const altDate1 = new Date();
+                          altDate1.setDate(altDate1.getDate() + 2);
+                          altDate1.setHours(14, 0, 0, 0);
+                          handleUseAlternativeTime(altDate1);
+                        }}
+                        className="text-xs border-yellow-200 text-yellow-800 hover:bg-yellow-50"
+                      >
+                        Jeudi 14h
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const altDate2 = new Date();
+                          altDate2.setDate(altDate2.getDate() + 4);
+                          altDate2.setHours(19, 0, 0, 0);
+                          handleUseAlternativeTime(altDate2);
+                        }}
+                        className="text-xs border-yellow-200 text-yellow-800 hover:bg-yellow-50"
+                      >
+                        Vendredi 19h
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Graphique d'engagement */}
+                {engagementChartData.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Engagement par heure</p>
+                    <div className="h-32">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={engagementChartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="hour" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="engagement" fill="#3b82f6" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Hashtags suggérés - Affiché seulement si une plateforme est sélectionnée */}
+          {selectedPlatforms.length > 0 && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Hash className="w-5 h-5 text-purple-600" />
+                <h3 className="font-semibold text-gray-900">🏷️ Hashtags suggérés</h3>
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  IA
+                </Badge>
+          </div>
+
+              <div className="space-y-4">
+                {/* Top 5 hashtags du moment */}
+                {hashtagSuggestions.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Top 5 du moment</p>
+                    <div className="flex flex-wrap gap-2">
+                      {hashtagSuggestions.slice(0, 5).map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddHashtag(suggestion.hashtag)}
+                          className="text-xs border-purple-200 text-purple-800 hover:bg-purple-50"
+                        >
+                          {suggestion.hashtag}
+                          <Badge variant="secondary" className="ml-1 text-xs">
+                            {suggestion.expectedEngagement.toFixed(1)}%
+                          </Badge>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sets de hashtags */}
+                {hashtagSets.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Utiliser un set</p>
+                    <div className="flex gap-2">
+                      <Select value={selectedHashtagSet} onValueChange={setSelectedHashtagSet}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Sélectionner un set" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hashtagSets.map((set) => (
+                            <SelectItem key={set.id} value={set.id}>
+                              {set.name} ({set.hashtags.length} hashtags)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUseHashtagSet(selectedHashtagSet)}
+                        disabled={!selectedHashtagSet}
+                        className="bg-purple-500 hover:bg-purple-600 text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Suggestions intelligentes */}
+                {hashtagSuggestions.length > 5 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Plus de suggestions</p>
+                    <div className="flex flex-wrap gap-2">
+                      {hashtagSuggestions.slice(5, 10).map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddHashtag(suggestion.hashtag)}
+                          className="text-xs border-gray-200 text-gray-700 hover:bg-gray-50"
+                        >
+                          {suggestion.hashtag}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Auto-complétion */}
+                <div className="text-xs text-gray-600">
+                  💡 Tapez # pour voir l'auto-complétion des hashtags
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Auteur et Campagne - DÉPLACÉ ICI */}
           <div className="grid grid-cols-2 gap-4 mb-6">
@@ -659,6 +1125,30 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
               </div>
             )}
 
+            {/* Sélection du tone de voix */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Tone de voix</label>
+              <Select value={selectedTone} onValueChange={setSelectedTone}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {toneOptions.map((tone) => {
+                    const IconComponent = tone.icon;
+                    return (
+                      <SelectItem key={tone.id} value={tone.id}>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className={`w-4 h-4 ${tone.color}`} />
+                          <span>{tone.label}</span>
+                          <span className="text-xs text-gray-500 ml-auto">{tone.description}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Boutons d'action */}
             {!generatedCaptions ? (
               <Button 
@@ -705,80 +1195,15 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
           </div>
         </div>
 
-        {/* Right Panel - Preview */}
-        <div className="w-1/2 bg-gray-50 p-6 border-l">
-          <h3 className="text-lg font-semibold mb-4">Aperçu</h3>
-          
-          {/* Platform Tabs - Same style as left panel */}
-          {selectedPlatforms.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-3">Aperçu pour</label>
-              <div className="flex gap-2">
-                {platforms
-                  .filter(p => selectedPlatforms.includes(p.id))
-                  .map((platform) => (
-                    <Button
-                      key={platform.id}
-                      variant={activePreview === platform.id ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setActivePreview(platform.id)}
-                      className={cn(
-                        "text-xs flex-1 relative",
-                        activePreview === platform.id && platform.color
-                      )}
-                    >
-                      {platform.name}
-                      {generatedCaptions?.[platform.id as keyof typeof generatedCaptions] && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-                      )}
-                    </Button>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {/* Preview Content */}
-          {selectedPlatforms.length > 0 ? (
-            <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <div className="scale-[0.9] origin-top-left">
-                {(() => {
-                  const currentCaption = generatedCaptions?.[activePreview as keyof typeof generatedCaptions];
-                  const displayContent = currentCaption || content || 'Votre contenu apparaîtra ici...';
-                  const profilePicture = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face';
-                  
-                  const previewProps = {
-                    content: displayContent,
-                    image: selectedImages[0] || '',
-                    author: 'Postelma',
-                    profilePicture,
-                    timestamp: '2h'
-                  };
-
-                  switch (activePreview) {
-                    case 'facebook':
-                      return <FacebookPreview {...previewProps} />;
-                    case 'twitter':
-                      return <TwitterPreview {...previewProps} />;
-                    case 'instagram':
-                      return <InstagramPreview {...previewProps} />;
-                    case 'linkedin':
-                      return <LinkedInPreview {...previewProps} />;
-                    case 'tiktok':
-                      return <TikTokPreview {...previewProps} />;
-                    case 'youtube':
-                      return <YouTubePreview {...previewProps} />;
-                    default:
-                      return <InstagramPreview {...previewProps} />;
-                  }
-                })()}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <p>Sélectionnez au moins une plateforme pour voir l'aperçu</p>
-            </div>
-          )}
-        </div>
+        {/* Right Panel - Preview - Composant mémorisé */}
+        <PreviewSection 
+          selectedPlatforms={selectedPlatforms}
+          activePreview={activePreview}
+          onPreviewChange={handlePreviewChange}
+          content={content}
+          selectedImages={selectedImages}
+          generatedCaptions={generatedCaptions}
+        />
       </div>
     </div>
   );

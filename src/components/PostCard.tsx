@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Post, SocialPlatform } from '@/types/Post';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Eye, Edit, Copy, Trash2 } from 'lucide-react';
+import { useImageLoader } from '@/hooks/useImageLoader';
 
 // Platform icons mapping
 const PlatformIcons = {
@@ -58,7 +59,33 @@ interface PostCardProps {
   onDelete?: (post: Post) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ 
+// Comparateur personnalisé pour React.memo
+// Évite les re-rendus inutiles quand les props n'ont pas changé
+const arePropsEqual = (prevProps: PostCardProps, nextProps: PostCardProps) => {
+  // Comparaison des props primitives
+  if (prevProps.isDragging !== nextProps.isDragging) return false;
+  
+  // Comparaison de l'objet post (structure complexe)
+  const prevPost = prevProps.post;
+  const nextPost = nextProps.post;
+  
+  return (
+    prevPost.id === nextPost.id &&
+    prevPost.content === nextPost.content &&
+    prevPost.author === nextPost.author &&
+    prevPost.image === nextPost.image &&
+    prevPost.scheduledTime.getTime() === nextPost.scheduledTime.getTime() &&
+    JSON.stringify(prevPost.platforms) === JSON.stringify(nextPost.platforms) &&
+    prevPost.status === nextPost.status &&
+    // Les fonctions de callback sont comparées par référence
+    prevProps.onPreview === nextProps.onPreview &&
+    prevProps.onEdit === nextProps.onEdit &&
+    prevProps.onDuplicate === nextProps.onDuplicate &&
+    prevProps.onDelete === nextProps.onDelete
+  );
+};
+
+const PostCard: React.FC<PostCardProps> = memo(({ 
   post, 
   isDragging = false,
   onPreview,
@@ -66,6 +93,9 @@ const PostCard: React.FC<PostCardProps> = ({
   onDuplicate,
   onDelete
 }) => {
+  // Utilisation du hook personnalisé pour gérer l'image
+  const { imageUrl, isLoading, error } = useImageLoader(post.image);
+
   const formatTime = (date: Date) => {
     return format(date, 'HH:mm', { locale: fr });
   };
@@ -119,15 +149,28 @@ const PostCard: React.FC<PostCardProps> = ({
           {post.content}
         </p>
 
-        {/* Image */}
+        {/* Image - Optimisée avec useImageLoader */}
         <div className="mb-2 max-h-[70px] overflow-hidden">
-          {post.image && (
+          {imageUrl && (
             <div className="relative w-full h-[70px] rounded-md overflow-hidden bg-muted">
-              <img 
-                src={post.image} 
-                alt="Post content" 
-                className="w-full h-full object-cover"
-              />
+              {isLoading ? (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+              ) : error ? (
+                <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 text-xs">
+                  Erreur image
+                </div>
+              ) : (
+                <img 
+                  src={imageUrl} 
+                  alt="Post content" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.warn('Erreur de chargement de l\'image:', error);
+                  }}
+                />
+              )}
               {post.platforms.length > 1 && (
                 <div className="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
                   +{post.platforms.length - 1}
@@ -187,6 +230,7 @@ const PostCard: React.FC<PostCardProps> = ({
       </div>
     </div>
   );
-};
+}, arePropsEqual);
 
+// Export du composant mémorisé
 export default PostCard;

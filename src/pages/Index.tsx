@@ -5,7 +5,8 @@ import { samplePosts } from '@/data/sampleData';
 
 const Index = () => {
   const [posts, setPosts] = useState<Post[]>(samplePosts);
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 0, 5));
+  
 
   const handlePostsChange = (newPosts: Post[]) => {
     setPosts(newPosts);

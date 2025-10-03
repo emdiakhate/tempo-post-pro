@@ -1,21 +1,82 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useImageLoader } from '@/hooks/useImageLoader';
 
-// Composant FacebookPreview
-export const FacebookPreview: React.FC<{
+// Interface pour les props des composants de prévisualisation
+interface PreviewProps {
   content: string;
   image: string;
   author: string;
   profilePicture: string;
   timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "2h" }) => {
+}
+
+// Composant d'image optimisé pour les prévisualisations
+// Utilise useImageLoader pour une gestion optimisée des images
+const OptimizedImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+  fallback?: React.ReactNode;
+}> = ({ src, alt, className = "", fallback }) => {
+  const { imageUrl, isLoading, error } = useImageLoader(src);
+
+  if (isLoading) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-gray-100`}>
+        <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error || !imageUrl) {
+    return fallback || (
+      <div className={`${className} flex items-center justify-center bg-gray-100 text-gray-500 text-sm`}>
+        Image non disponible
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={imageUrl} 
+      alt={alt} 
+      className={className}
+      onError={(e) => {
+        console.warn('Erreur de chargement de l\'image:', error);
+      }}
+    />
+  );
+};
+
+// Comparateur personnalisé pour les composants de prévisualisation
+// Optimise les re-rendus en comparant les props essentielles
+const arePreviewPropsEqual = (prevProps: PreviewProps, nextProps: PreviewProps) => {
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.image === nextProps.image &&
+    prevProps.author === nextProps.author &&
+    prevProps.profilePicture === nextProps.profilePicture &&
+    prevProps.timestamp === nextProps.timestamp
+  );
+};
+
+// Composant FacebookPreview mémorisé
+// Évite les re-rendus inutiles lors des changements de contenu
+export const FacebookPreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "2h" 
+}) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg max-w-md mx-auto">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <img 
+          <OptimizedImage 
             src={profilePicture} 
             alt={author}
             className="w-10 h-10 rounded-full object-cover"
@@ -45,7 +106,7 @@ export const FacebookPreview: React.FC<{
         
         {image && (
           <div className="mb-4">
-            <img 
+            <OptimizedImage 
               src={image} 
               alt="Post content"
               className="w-full rounded-lg"
@@ -75,16 +136,17 @@ export const FacebookPreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
-// Composant TwitterPreview
-export const TwitterPreview: React.FC<{
-  content: string;
-  image: string;
-  author: string;
-  profilePicture: string;
-  timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "3m" }) => {
+// Composant TwitterPreview mémorisé
+// Optimise les performances pour les aperçus Twitter
+export const TwitterPreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "3m" 
+}) => {
   return (
     <div className="bg-black text-white rounded-2xl max-w-md mx-auto p-4">
       {/* Header */}
@@ -123,7 +185,7 @@ export const TwitterPreview: React.FC<{
         
         {image && (
           <div className="mt-3">
-            <img 
+            <OptimizedImage 
               src={image} 
               alt="Post content"
               className="w-full rounded-2xl"
@@ -178,22 +240,24 @@ export const TwitterPreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
 // Composant InstagramPreview
-export const InstagramPreview: React.FC<{
-  content: string;
-  image: string;
-  author: string;
-  profilePicture: string;
-  timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "2h" }) => {
+// Composant InstagramPreview mémorisé
+// Optimise les performances pour les aperçus Instagram
+export const InstagramPreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "2h" 
+}) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg max-w-sm mx-auto">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <img 
+          <OptimizedImage 
             src={profilePicture} 
             alt={author}
             className="w-8 h-8 rounded-full object-cover"
@@ -212,7 +276,7 @@ export const InstagramPreview: React.FC<{
       {/* Image */}
       {image && (
         <div className="aspect-square">
-          <img 
+          <OptimizedImage 
             src={image} 
             alt="Post content"
             className="w-full h-full object-cover"
@@ -250,22 +314,24 @@ export const InstagramPreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
 // Composant LinkedInPreview
-export const LinkedInPreview: React.FC<{
-  content: string;
-  image: string;
-  author: string;
-  profilePicture: string;
-  timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "2h" }) => {
+// Composant LinkedInPreview mémorisé
+// Optimise les performances pour les aperçus LinkedIn
+export const LinkedInPreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "2h" 
+}) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg max-w-md mx-auto">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <img 
+          <OptimizedImage 
             src={profilePicture} 
             alt={author}
             className="w-10 h-10 rounded-full object-cover"
@@ -291,7 +357,7 @@ export const LinkedInPreview: React.FC<{
         
         {image && (
           <div className="mb-4">
-            <img 
+            <OptimizedImage 
               src={image} 
               alt="Post content"
               className="w-full rounded-lg"
@@ -321,22 +387,24 @@ export const LinkedInPreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
 // Composant TikTokPreview
-export const TikTokPreview: React.FC<{
-  content: string;
-  image: string;
-  author: string;
-  profilePicture: string;
-  timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "2h" }) => {
+// Composant TikTokPreview mémorisé
+// Optimise les performances pour les aperçus TikTok
+export const TikTokPreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "2h" 
+}) => {
   return (
     <div className="bg-black text-white rounded-lg max-w-sm mx-auto aspect-[9/16] relative overflow-hidden">
       {/* Video/Image */}
       {image && (
         <div className="absolute inset-0">
-          <img 
+          <OptimizedImage 
             src={image} 
             alt="Post content"
             className="w-full h-full object-cover"
@@ -350,7 +418,7 @@ export const TikTokPreview: React.FC<{
       {/* Content */}
       <div className="absolute bottom-4 left-4 right-4">
         <div className="flex items-center gap-2 mb-2">
-          <img 
+          <OptimizedImage 
             src={profilePicture} 
             alt={author}
             className="w-8 h-8 rounded-full object-cover"
@@ -384,22 +452,24 @@ export const TikTokPreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
 // Composant YouTubePreview
-export const YouTubePreview: React.FC<{
-  content: string;
-  image: string;
-  author: string;
-  profilePicture: string;
-  timestamp?: string;
-}> = ({ content, image, author, profilePicture, timestamp = "2h" }) => {
+// Composant YouTubePreview mémorisé
+// Optimise les performances pour les aperçus YouTube
+export const YouTubePreview: React.FC<PreviewProps> = memo(({ 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  timestamp = "2h" 
+}) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg max-w-md mx-auto">
       {/* Video Player */}
       <div className="relative aspect-video bg-black rounded-t-lg">
         {image && (
-          <img 
+          <OptimizedImage 
             src={image} 
             alt="Video thumbnail"
             className="w-full h-full object-cover"
@@ -420,7 +490,7 @@ export const YouTubePreview: React.FC<{
       {/* Content */}
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <img 
+          <OptimizedImage 
             src={profilePicture} 
             alt={author}
             className="w-10 h-10 rounded-full object-cover"
@@ -439,10 +509,10 @@ export const YouTubePreview: React.FC<{
       </div>
     </div>
   );
-};
+}, arePreviewPropsEqual);
 
-// Composant principal PreviewModal
-const PreviewModal: React.FC<{
+// Interface pour le composant principal PreviewModal
+interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   content: string;
@@ -450,7 +520,33 @@ const PreviewModal: React.FC<{
   author: string;
   profilePicture: string;
   selectedPlatforms: string[];
-}> = ({ isOpen, onClose, content, image, author, profilePicture, selectedPlatforms }) => {
+}
+
+// Comparateur personnalisé pour PreviewModal
+// Évite les re-rendus inutiles du modal principal
+const areModalPropsEqual = (prevProps: PreviewModalProps, nextProps: PreviewModalProps) => {
+  return (
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.content === nextProps.content &&
+    prevProps.image === nextProps.image &&
+    prevProps.author === nextProps.author &&
+    prevProps.profilePicture === nextProps.profilePicture &&
+    JSON.stringify(prevProps.selectedPlatforms) === JSON.stringify(nextProps.selectedPlatforms) &&
+    prevProps.onClose === nextProps.onClose
+  );
+};
+
+// Composant principal PreviewModal mémorisé
+// Optimise les performances du modal de prévisualisation
+const PreviewModal: React.FC<PreviewModalProps> = memo(({ 
+  isOpen, 
+  onClose, 
+  content, 
+  image, 
+  author, 
+  profilePicture, 
+  selectedPlatforms 
+}) => {
   if (!isOpen) return null;
 
   const renderPreview = (platform: string) => {
@@ -501,6 +597,7 @@ const PreviewModal: React.FC<{
       </div>
     </div>
   );
-};
+}, areModalPropsEqual);
 
+// Export du composant mémorisé
 export default PreviewModal;
