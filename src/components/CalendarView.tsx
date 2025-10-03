@@ -4,8 +4,11 @@ import { Post } from '@/types/Post';
 import PostCard from './PostCard';
 import PostCreationModal from './PostCreationModal';
 import PostPreviewModal from './PostPreviewModal';
+import Analytics from '@/pages/Analytics';
+import QueuePage from '@/pages/QueuePage';
+import ArchivesPage from '@/pages/ArchivesPage';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit3, Calendar, Clock, FileText, CheckCircle, XCircle, Megaphone, Search, Archive, Instagram, Rss, AlertTriangle, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit3, Calendar, Clock, FileText, CheckCircle, XCircle, Megaphone, Search, Archive, Instagram, Rss, AlertTriangle, Menu, ChevronLeft, ChevronRight, BarChart3, FolderOpen } from 'lucide-react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -29,6 +32,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const [selectedDayForPost, setSelectedDayForPost] = useState<string>('');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [previewingPost, setPreviewingPost] = useState<Post | null>(null);
+  const [activePage, setActivePage] = useState<string>('calendar');
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -149,15 +153,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
 
   const sidebarItems = [
-    { id: 'publishing', label: 'Publication', icon: Edit3, active: true },
-    { id: 'calendar', label: 'Calendrier', icon: Calendar },
-    { id: 'queue', label: 'File d\'attente Sprout', icon: Clock, count: 12 },
-    { id: 'drafts', label: 'Brouillons', icon: FileText, count: 3 },
-    { id: 'published', label: 'Publié', icon: CheckCircle, count: 45 },
-    { id: 'failed', label: 'Échec', icon: XCircle, count: 2 },
-    { id: 'campaigns', label: 'Campagnes', icon: Megaphone },
-    { id: 'discovery', label: 'Découverte', icon: Search },
-    { id: 'archive', label: 'Archives', icon: Archive },
+    { id: 'publishing', label: 'Publication', icon: Edit3, active: activePage === 'publishing' },
+    { id: 'calendar', label: 'Calendrier', icon: Calendar, active: activePage === 'calendar' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, active: activePage === 'analytics' },
+    { id: 'queue', label: 'File d\'attente', icon: Clock, count: 12, active: activePage === 'queue' },
+    { id: 'archives', label: 'Archives', icon: FolderOpen, active: activePage === 'archives' },
+    { id: 'drafts', label: 'Brouillons', icon: FileText, count: 3, active: activePage === 'drafts' },
+    { id: 'published', label: 'Publié', icon: CheckCircle, count: 45, active: activePage === 'published' },
+    { id: 'failed', label: 'Échec', icon: XCircle, count: 2, active: activePage === 'failed' },
+    { id: 'campaigns', label: 'Campagnes', icon: Megaphone, active: activePage === 'campaigns' },
+    { id: 'discovery', label: 'Découverte', icon: Search, active: activePage === 'discovery' },
   ];
 
   const socialItems = [
@@ -193,6 +198,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               {sidebarItems.map((item) => (
                 <button
                   key={item.id}
+                  onClick={() => setActivePage(item.id)}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                     item.active 
@@ -286,71 +292,76 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="flex-1 overflow-hidden">
-          <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="flex h-full">
-              {weekDays.map((day) => (
-                <div key={day.key} className="flex-1 border-r border-gray-200 flex flex-col min-w-0">
-                  {/* Day Header */}
-                  <div className="p-2 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-xs text-gray-700">
-                          {day.name} {day.number}
-                        </h3>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCreatePost(day.key)}
-                        className="h-5 w-5 p-0 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          {activePage === 'analytics' && <Analytics />}
+          {activePage === 'queue' && <QueuePage />}
+          {activePage === 'archives' && <ArchivesPage />}
+          {activePage === 'calendar' && (
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <div className="flex h-full">
+          {weekDays.map((day) => (
+                  <div key={day.key} className="flex-1 border-r border-gray-200 flex flex-col min-w-0">
+                    {/* Day Header */}
+                    <div className="p-2 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                          <h3 className="font-medium text-xs text-gray-700">
+                      {day.name} {day.number}
+                    </h3>
                   </div>
-
-                  {/* Posts Column */}
-                  <Droppable droppableId={day.key}>
-                    {(provided, snapshot) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className={cn(
-                          "flex-1 px-1 py-1 space-y-1 h-[calc(100vh-180px)] group",
-                          snapshot.isDraggingOver && "bg-blue-50 border-2 border-dashed border-blue-300"
-                        )}
-                      >
-                        {postsByDay[day.key]?.map((post, index) => (
-                          <Draggable key={post.id} draggableId={post.id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="w-full"
-                              >
-                                <PostCard
-                                  post={post}
-                                  isDragging={snapshot.isDragging}
-                                  onPreview={handlePreview}
-                                  onEdit={handleEdit}
-                                  onDuplicate={handleDuplicate}
-                                  onDelete={handleDelete}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                          onClick={() => handleCreatePost(day.key)}
+                          className="h-5 w-5 p-0 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
                 </div>
-              ))}
+              </div>
+
+                    {/* Posts Column */}
+                    <Droppable droppableId={day.key}>
+                {(provided, snapshot) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className={cn(
+                            "flex-1 px-1 py-1 space-y-1 h-[calc(100vh-180px)] group",
+                            snapshot.isDraggingOver && "bg-blue-50 border-2 border-dashed border-blue-300"
+                    )}
+                  >
+                    {postsByDay[day.key]?.map((post, index) => (
+                            <Draggable key={post.id} draggableId={post.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                                  className="w-full"
+                          >
+                            <PostCard
+                              post={post}
+                              isDragging={snapshot.isDragging}
+                                    onPreview={handlePreview}
+                                    onEdit={handleEdit}
+                                    onDuplicate={handleDuplicate}
+                                    onDelete={handleDelete}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
             </div>
-          </DragDropContext>
+          ))}
+        </div>
+      </DragDropContext>
+          )}
         </div>
       </div>
       
@@ -378,7 +389,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Post Preview Modal */}
       {previewingPost && (
         <PostPreviewModal
-          post={previewingPost}
+          post={{
+            ...previewingPost,
+            createdAt: new Date().toISOString(),
+            platforms: previewingPost.platforms || [],
+            status: (previewingPost.status === 'pending' ? 'scheduled' : previewingPost.status) || 'draft'
+          }}
           isOpen={true}
           onClose={() => setPreviewingPost(null)}
         />

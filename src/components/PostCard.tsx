@@ -77,7 +77,7 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <div 
       className={cn(
-        "bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-move flex flex-col h-[180px] w-full",
+        "bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-move flex flex-col h-[220px] w-full",
         isDragging && "opacity-75 transform rotate-1 shadow-lg"
       )}
     >
@@ -183,15 +183,7 @@ const PostCard: React.FC<PostCardProps> = ({
           </button>
         </div>
 
-        {/* Engagement stats */}
-        {post.engagement && post.status === 'published' && (
-          <div className="flex items-center gap-3 mb-2 text-[10px] text-muted-foreground">
-            <span>👁 {post.engagement.views}</span>
-            <span>❤️ {post.engagement.likes}</span>
-            <span>💬 {post.engagement.comments}</span>
-            <span>🔄 {post.engagement.shares}</span>
-        </div>
-        )}
+       
       </div>
     </div>
   );

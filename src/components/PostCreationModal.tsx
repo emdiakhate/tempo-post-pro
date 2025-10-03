@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { FacebookPreview, TwitterPreview, InstagramPreview, LinkedInPreview, TikTokPreview, YouTubePreview } from './PreviewModal';
 
 interface PostCreationModalProps {
   isOpen: boolean;
@@ -96,6 +97,86 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     } else {
       setSelectedImage(null);
     }
+  };
+
+  // Fonctions pour la génération IA
+  const handleAiSourceImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImages: string[] = [];
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newImages.push(e.target?.result as string);
+          if (newImages.length === files.length) {
+            setAiSourceImages(prev => [...prev, ...newImages]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeAiSourceImage = (index: number) => {
+    setAiSourceImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAiImageGeneration = async () => {
+    setIsGeneratingImage(true);
+    
+    try {
+      const currentType = aiGenerationTypes.find(t => t.id === aiGenerationType);
+      if (!currentType) return;
+
+      // Validation pour les types qui nécessitent des images
+      if (currentType.requiresImages > 0 && aiSourceImages.length < currentType.requiresImages) {
+        alert(`Ce type de génération nécessite ${currentType.requiresImages} image(s)`);
+        return;
+      }
+
+      // Validation pour le prompt (sauf UGC)
+      if (aiGenerationType !== 'ugc' && !aiPrompt.trim()) {
+        alert('Veuillez saisir un prompt pour la génération');
+        return;
+      }
+
+      const webhookUrl = AI_WEBHOOKS[aiGenerationType];
+      const payload = {
+        prompt: aiPrompt,
+        images: aiSourceImages,
+        type: aiGenerationType
+      };
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.imageUrl) {
+          setGeneratedImages(prev => [...prev, data.imageUrl]);
+        } else {
+          alert('Erreur lors de la génération: ' + (data.message || 'Erreur inconnue'));
+        }
+      } else {
+        alert('Erreur lors de la génération');
+      }
+    } catch (error) {
+      console.error('Erreur génération IA:', error);
+      alert('Erreur lors de la génération');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleAddGeneratedImage = (imageUrl: string) => {
+    setSelectedImages([imageUrl]);
+    setSelectedImage(imageUrl);
+    setMediaSource('upload'); // Retourner à l'onglet upload
   };
 
   // Fonction pour calculer le slot temporel
@@ -200,7 +281,7 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
           // Callback pour ajouter au calendrier
           onSave(scheduledPost);
           alert('Post programmé avec succès !');
-          onClose();
+    onClose();
         }
       }
     } catch (error) {
@@ -222,151 +303,6 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
     }
   };
 
-  const renderPreview = () => {
-    const currentCaption = generatedCaptions?.[activePreview as keyof typeof generatedCaptions];
-    const displayContent = currentCaption || content || 'Votre contenu apparaîtra ici...';
-    
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        {/* Header selon la plateforme */}
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
-            </div>
-            <div>
-              <div className="font-semibold text-sm">Postelma</div>
-              <div className="text-xs text-gray-500">
-                {activePreview === 'instagram' && '@postelma'}
-                {activePreview === 'facebook' && 'Il y a quelques instants'}
-                {activePreview === 'linkedin' && 'Postelma • 1er'}
-                {activePreview === 'twitter' && '@postelma • maintenant'}
-                {activePreview === 'tiktok' && '@postelma'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenu textuel */}
-        <div className="p-4">
-          <div className="text-sm text-gray-800 mb-3 leading-relaxed whitespace-pre-wrap">
-            {displayContent}
-          </div>
-        
-          {/* Gestion des images selon la plateforme */}
-          {selectedImages.length > 0 && (
-            <div className="mb-3">
-              {activePreview === 'instagram' && (
-                <div className={`${selectedImages.length === 1 ? '' : 'grid grid-cols-2 gap-1'}`}>
-                  {selectedImages.slice(0, 4).map((image, index) => (
-                    <img 
-                      key={index}
-                      src={image} 
-                      alt={`Image ${index + 1}`}
-                      className={`w-full rounded ${selectedImages.length === 1 ? 'aspect-square max-h-80' : 'aspect-square'} object-cover`}
-                    />
-                  ))}
-                </div>
-              )}
-              
-              {(activePreview === 'facebook' || activePreview === 'linkedin') && (
-                <div>
-                  <img 
-                    src={selectedImages[0]} 
-                    alt="Image principale"
-                    className="w-full rounded-lg max-h-96 object-cover"
-                  />
-                  {selectedImages.length > 1 && (
-                    <div className="flex gap-2 mt-2">
-                      {selectedImages.slice(1, 4).map((image, index) => (
-                        <img 
-                          key={index}
-                          src={image} 
-                          alt={`Image ${index + 2}`}
-                          className="w-16 h-16 rounded object-cover border"
-                        />
-                      ))}
-                      {selectedImages.length > 4 && (
-                        <div className="w-16 h-16 rounded bg-gray-200 flex items-center justify-center text-xs">
-                          +{selectedImages.length - 4}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {activePreview === 'twitter' && (
-                <div className={`${selectedImages.length === 1 ? '' : selectedImages.length === 2 ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-2 gap-1'} rounded-2xl overflow-hidden`}>
-                  {selectedImages.slice(0, 4).map((image, index) => (
-                    <img 
-                      key={index}
-                      src={image} 
-                      alt={`Image ${index + 1}`}
-                      className={`w-full object-cover ${selectedImages.length === 1 ? 'max-h-80' : selectedImages.length === 3 && index === 0 ? 'row-span-2 h-full' : 'aspect-square'}`}
-                    />
-                  ))}
-                </div>
-              )}
-              
-              {activePreview === 'tiktok' && (
-                <div className="relative">
-                  <img 
-                    src={selectedImages[0]} 
-                    alt="Image TikTok"
-                    className="w-full aspect-[9/16] max-h-96 object-cover rounded-lg"
-                  />
-                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                    TikTok
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        
-        </div>
-
-        {/* Footer selon la plateforme */}
-        <div className="px-4 pb-4">
-          {activePreview === 'instagram' && (
-            <div className="flex items-center gap-4 text-gray-600">
-              <span>❤️ 1.2k</span>
-              <span>💬 89</span>
-              <span>📤 45</span>
-            </div>
-          )}
-          
-          {activePreview === 'facebook' && (
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>👍 J'aime</span>
-                <span>💬 Commenter</span>
-                <span>📤 Partager</span>
-              </div>
-            </div>
-          )}
-          
-          {activePreview === 'twitter' && (
-            <div className="flex items-center gap-6 text-gray-500 text-sm pt-2">
-              <span>💬 12</span>
-              <span>🔄 45</span>
-              <span>❤️ 234</span>
-              <span>📤</span>
-            </div>
-          )}
-          
-          {activePreview === 'linkedin' && (
-            <div className="flex items-center gap-4 text-sm text-gray-600 pt-2 border-t">
-              <span>👍 J'aime</span>
-              <span>💬 Commenter</span>
-              <span>🔄 Republier</span>
-              <span>📤 Envoyer</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   if (!isOpen) return null;
 
@@ -406,7 +342,36 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
             <label className="block text-sm font-medium mb-2">
               Images (optionnel)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            
+            {/* Onglets Upload/IA */}
+            <div className="flex mb-4 border-b border-gray-200">
+              <button
+                onClick={() => setMediaSource('upload')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                  mediaSource === 'upload' 
+                    ? "border-blue-500 text-blue-600" 
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                )}
+              >
+                Upload d'images
+              </button>
+              <button
+                onClick={() => setMediaSource('ai')}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                  mediaSource === 'ai' 
+                    ? "border-blue-500 text-blue-600" 
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                )}
+              >
+                Générer avec IA
+              </button>
+            </div>
+
+            {/* Contenu Upload */}
+            {mediaSource === 'upload' && (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
               <input
                   type="file"
                   accept="image/*"
@@ -451,6 +416,141 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
               )}
               </label>
             </div>
+            )}
+
+            {/* Contenu Génération IA */}
+            {mediaSource === 'ai' && (
+              <div className="space-y-4">
+                {/* Types de génération IA */}
+                <div className="grid grid-cols-2 gap-3">
+                  {aiGenerationTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setAiGenerationType(type.id as any)}
+                      className={cn(
+                        "p-3 text-left border rounded-lg transition-colors",
+                        aiGenerationType === type.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      )}
+                    >
+                      <div className="font-medium text-sm">{type.name}</div>
+                      <div className="text-xs text-gray-600 mt-1">{type.description}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Prompt pour l'IA */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Prompt {aiGenerationType === 'ugc' ? '(optionnel)' : ''}
+                  </label>
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder={aiGenerationType === 'ugc' 
+                      ? "Décrivez le contenu souhaité (optionnel)..." 
+                      : "Décrivez l'image que vous voulez générer..."
+                    }
+                    className="min-h-20"
+                  />
+                </div>
+
+                {/* Upload d'images sources pour édition/combinaison */}
+                {(aiGenerationType === 'edit' || aiGenerationType === 'combine' || aiGenerationType === 'ugc') && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Images sources {aiGenerationType === 'combine' ? '(2 images requises)' : '(1 image requise)'}
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAiSourceImageUpload}
+                        multiple={aiGenerationType === 'combine'}
+                        className="hidden"
+                        id="ai-source-upload"
+                      />
+                      <label htmlFor="ai-source-upload" className="cursor-pointer block">
+                        {aiSourceImages.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {aiSourceImages.map((image, index) => (
+                              <div key={index} className="relative group">
+                                <img 
+                                  src={image} 
+                                  alt={`Source ${index + 1}`} 
+                                  className="w-full h-24 object-cover rounded border"
+                                />
+                                <button
+                                  onClick={() => removeAiSourceImage(index)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            {(aiGenerationType === 'combine' ? aiSourceImages.length < 2 : aiSourceImages.length < 1) && (
+                              <div className="border-2 border-dashed border-gray-300 rounded flex items-center justify-center h-24">
+                                <span className="text-gray-500 text-xs">
+                                  + Ajouter {aiGenerationType === 'combine' ? 'image' : 'image'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-600 mb-2">Cliquez pour sélectionner {aiGenerationType === 'combine' ? '2 images' : '1 image'}</p>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bouton de génération */}
+                <Button
+                  onClick={handleAiImageGeneration}
+                  disabled={isGeneratingImage || (aiGenerationType !== 'simple' && aiSourceImages.length === 0)}
+                  className="w-full"
+                >
+                  {isGeneratingImage ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Génération en cours...
+                    </>
+                  ) : (
+                    `Générer ${aiGenerationType === 'simple' ? 'une image' : aiGenerationType === 'combine' ? 'une combinaison' : 'une édition'}`
+                  )}
+                </Button>
+
+                {/* Images générées */}
+                {generatedImages.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Images générées</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {generatedImages.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={image} 
+                            alt={`Générée ${index + 1}`} 
+                            className="w-full h-24 object-cover rounded border"
+                          />
+                          <button
+                            onClick={() => handleAddGeneratedImage(image)}
+                            className="absolute inset-0 bg-blue-500 bg-opacity-0 hover:bg-opacity-20 text-white flex items-center justify-center text-xs transition-all"
+                          >
+                            <span className="bg-blue-500 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100">
+                              Utiliser
+                            </span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Plateformes - DÉPLACÉ ICI */}
@@ -639,7 +739,40 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
           {/* Preview Content */}
           {selectedPlatforms.length > 0 ? (
-            renderPreview()
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="scale-[0.9] origin-top-left">
+                {(() => {
+                  const currentCaption = generatedCaptions?.[activePreview as keyof typeof generatedCaptions];
+                  const displayContent = currentCaption || content || 'Votre contenu apparaîtra ici...';
+                  const profilePicture = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face';
+                  
+                  const previewProps = {
+                    content: displayContent,
+                    image: selectedImages[0] || '',
+                    author: 'Postelma',
+                    profilePicture,
+                    timestamp: '2h'
+                  };
+
+                  switch (activePreview) {
+                    case 'facebook':
+                      return <FacebookPreview {...previewProps} />;
+                    case 'twitter':
+                      return <TwitterPreview {...previewProps} />;
+                    case 'instagram':
+                      return <InstagramPreview {...previewProps} />;
+                    case 'linkedin':
+                      return <LinkedInPreview {...previewProps} />;
+                    case 'tiktok':
+                      return <TikTokPreview {...previewProps} />;
+                    case 'youtube':
+                      return <YouTubePreview {...previewProps} />;
+                    default:
+                      return <InstagramPreview {...previewProps} />;
+                  }
+                })()}
+              </div>
+            </div>
           ) : (
             <div className="text-center text-gray-500 py-8">
               <p>Sélectionnez au moins une plateforme pour voir l'aperçu</p>
