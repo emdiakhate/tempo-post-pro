@@ -60,9 +60,9 @@ const PostPreviewModal: React.FC<PostPreviewModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Aperçu de la publication</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-5 h-5" />
-          </Button>
+            </Button>
         </div>
 
         {/* Content */}
@@ -99,27 +99,27 @@ const PostPreviewModal: React.FC<PostPreviewModalProps> = ({
                 {post.platforms.map((platform) => (
                   <span key={platform} className="text-lg" title={platform}>
                     {platformIcons[platform as keyof typeof platformIcons]}
-                  </span>
+              </span>
                 ))}
-              </div>
             </div>
+          </div>
 
             {/* Content */}
             <div className="mb-4">
               <p className="text-gray-900 leading-relaxed">{post.content}</p>
-            </div>
+          </div>
 
-            {/* Image */}
-            {post.image && (
+          {/* Image */}
+          {post.image && (
               <div className="mb-4">
                 <img 
                   src={post.image} 
-                  alt="Post content"
+                  alt="Post content" 
                   className="w-full max-w-md rounded-lg"
                 />
               </div>
             )}
-          </div>
+            </div>
 
           {/* Preview */}
           <div>
@@ -133,7 +133,7 @@ const PostPreviewModal: React.FC<PostPreviewModalProps> = ({
                     <h4 className="font-semibold text-gray-900">{post.author}</h4>
                     <div className="text-sm text-gray-500">2h</div>
                   </div>
-                </div>
+              </div>
                 
                 <p className="text-gray-900 mb-4 leading-relaxed">{post.content}</p>
                 
@@ -144,8 +144,8 @@ const PostPreviewModal: React.FC<PostPreviewModalProps> = ({
                       alt="Post content"
                       className="w-full rounded-lg"
                     />
-                  </div>
-                )}
+            </div>
+          )}
 
                 <div className="flex items-center gap-4 text-gray-600">
                   <button className="flex items-center gap-2 hover:text-blue-600">

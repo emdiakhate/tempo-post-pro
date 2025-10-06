@@ -2,6 +2,7 @@ import React, { useState, useEffect, memo, useCallback } from 'react';
 import { X, Upload, Image as ImageIcon, Calendar, Clock, TrendingUp, Lightbulb, Hash, Copy, Plus, Briefcase, Smile, Zap, DollarSign, BookOpen, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { FacebookPreview, TwitterPreview, InstagramPreview, LinkedInPreview, Tik
 import { useBestTime, useEngagementChart } from '@/hooks/useBestTime';
 import { useHashtagSuggestions, useHashtagSets } from '@/hooks/useHashtagStats';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import ConnectedAccountsSelector from './ConnectedAccountsSelector';
 
 interface PostCreationModalProps {
   isOpen: boolean;
@@ -177,14 +179,18 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  selectedDay,
-  initialData,
-  isEditing = false
+  selectedDay, 
+  initialData, 
+  isEditing = false 
 }) => {
+  const { hasPermission, currentUser } = useAuth();
   const [content, setContent] = useState(initialData?.content || '');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(initialData?.platforms || ['instagram']);
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>(initialData?.accounts || []);
   const [selectedImage, setSelectedImage] = useState<string | null>(initialData?.image || null);
-  const [selectedImages, setSelectedImages] = useState<string[]>(initialData?.images || []);
+  const [selectedImages, setSelectedImages] = useState<string[]>(
+    initialData?.images || (initialData?.image ? [initialData.image] : [])
+  );
   const [activePreview, setActivePreview] = useState('instagram');
   const [author, setAuthor] = useState('Postelma');
   const [campaign, setCampaign] = useState(initialData?.campaign || '');
@@ -216,6 +222,20 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // États pour le tone de voix
   const [selectedTone, setSelectedTone] = useState<string>('automatic');
+
+  // Effet pour charger les données initiales en mode édition
+  useEffect(() => {
+    if (isEditing && initialData) {
+      // Charger l'image si elle existe
+      if (initialData.image && !selectedImages.includes(initialData.image)) {
+        setSelectedImages([initialData.image]);
+      }
+      // Charger les images multiples si elles existent
+      if (initialData.images && initialData.images.length > 0) {
+        setSelectedImages(initialData.images);
+      }
+    }
+  }, [isEditing, initialData, selectedImages]);
 
   // Configuration des tones de voix
   const toneOptions = [
@@ -477,35 +497,55 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
 
   // Fonction pour publier
   const publishPosts = async () => {
-    if (!generatedCaptions) return;
+    if (!generatedCaptions || selectedAccounts.length === 0) return;
     
     setIsPublishing(true);
     
     try {
       if (publishType === 'now') {
-        // Publication immédiate via N8N
-        const publishData = {
-          captions: generatedCaptions,
-          platforms: selectedPlatforms,
-          images: selectedImages,
-          type: 'immediate'
-        };
+        // Vérifier les permissions pour la publication
+        if (hasPermission('canPublish')) {
+          // Publication immédiate via N8N
+          const publishData = {
+            captions: generatedCaptions,
+            accounts: selectedAccounts, // Utiliser les comptes sélectionnés
+            images: selectedImages,
+            type: 'immediate'
+          };
 
-        const response = await fetch('https://malick000.app.n8n.cloud/webhook/publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(publishData),
-        });
+          const response = await fetch('https://malick000.app.n8n.cloud/webhook/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(publishData),
+          });
 
-        if (response.ok) {
-          alert('Publications envoyées avec succès !');
+          if (response.ok) {
+            alert('Publications envoyées avec succès !');
+            onClose();
+          } else {
+            alert('Erreur lors de la publication');
+          }
+        } else {
+          // Soumission pour approbation (Creator)
+          const approvalData = {
+            captions: generatedCaptions,
+            accounts: selectedAccounts, // Utiliser les comptes sélectionnés
+            images: selectedImages,
+            type: 'approval',
+            author: currentUser?.name,
+            authorId: currentUser?.id
+          };
+
+          // TODO: Envoyer à la queue d'approbation
+          console.log('Soumission pour approbation:', approvalData);
+          alert('Contenu soumis pour approbation !');
           onClose();
         }
       } else {
         // Publication programmée via N8N avec date
         const publishData = {
           captions: generatedCaptions,
-          platforms: selectedPlatforms,
+          accounts: selectedAccounts, // Utiliser les comptes sélectionnés
           images: selectedImages,
           type: 'scheduled',
           scheduledDateTime: scheduledDateTime?.toISOString()
@@ -587,6 +627,41 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
             />
             <div className="text-right text-xs text-gray-500 mt-1">
               {content.length}/2200 caractères
+            </div>
+            
+            {/* Tone de voix */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2">Tone de voix</label>
+              <Select value={selectedTone} onValueChange={setSelectedTone}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {toneOptions.map((tone) => {
+                    const IconComponent = tone.icon;
+                    return (
+                      <SelectItem key={tone.id} value={tone.id}>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className={`w-4 h-4 ${tone.color}`} />
+                          <span>{tone.label}</span>
+                          <span className="text-xs text-gray-500 ml-auto">{tone.description}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Bouton Générer les captions IA */}
+            <div className="mt-4">
+              <Button
+                onClick={generateCaptions}
+                disabled={isGeneratingCaptions}
+                className="w-full bg-blue-500 hover:bg-blue-600"
+              >
+                {isGeneratingCaptions ? 'Génération...' : 'Générer les captions IA'}
+              </Button>
             </div>
           </div>
 
@@ -806,16 +881,16 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
             )}
           </div>
 
-          {/* Plateformes - Composant mémorisé */}
+          {/* Comptes connectés - Nouveau sélecteur */}
           <div className="mb-6">
-            <PlatformSelector 
-              selectedPlatforms={selectedPlatforms}
-              onPlatformChange={handlePlatformChange}
+            <ConnectedAccountsSelector 
+              selectedAccounts={selectedAccounts}
+              onAccountsChange={setSelectedAccounts}
             />
           </div>
 
-          {/* Meilleurs moments - Affiché seulement si une plateforme est sélectionnée */}
-          {selectedPlatforms.length > 0 && (
+          {/* Meilleurs moments - Affiché seulement si un compte est sélectionné */}
+          {selectedAccounts.length > 0 && (
             <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb className="w-5 h-5 text-blue-600" />
@@ -1125,73 +1200,51 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
               </div>
             )}
 
-            {/* Sélection du tone de voix */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Tone de voix</label>
-              <Select value={selectedTone} onValueChange={setSelectedTone}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner un tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {toneOptions.map((tone) => {
-                    const IconComponent = tone.icon;
-                    return (
-                      <SelectItem key={tone.id} value={tone.id}>
-                        <div className="flex items-center gap-2">
-                          <IconComponent className={`w-4 h-4 ${tone.color}`} />
-                          <span>{tone.label}</span>
-                          <span className="text-xs text-gray-500 ml-auto">{tone.description}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
 
             {/* Boutons d'action */}
-            {!generatedCaptions ? (
+            <div className="space-y-3">
+              {/* Bouton Publier - avec restrictions par rôle */}
               <Button 
-                onClick={generateCaptions}
-                disabled={!content.trim() || isGeneratingCaptions}
-                className="w-full bg-blue-500 hover:bg-blue-600"
+                onClick={publishPosts}
+                disabled={
+                  selectedAccounts.length === 0 || 
+                  isPublishing || 
+                  (publishType === 'scheduled' && !scheduledDateTime)
+                }
+                className={cn(
+                  "w-full font-semibold py-3",
+                  hasPermission('canPublish') 
+                    ? (publishType === 'now' 
+                        ? 'bg-green-500 hover:bg-green-600' 
+                        : 'bg-blue-500 hover:bg-blue-600')
+                    : (publishType === 'now' 
+                        ? 'bg-orange-500 hover:bg-orange-600' 
+                        : 'bg-orange-500 hover:bg-orange-600')
+                )}
               >
-                {isGeneratingCaptions ? 'Génération...' : 'Générer les captions IA'}
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <Button 
+                {isPublishing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {publishType === 'now' ? 'Publication...' : 'Programmation...'}
+                  </div>
+                ) : (
+                  hasPermission('canPublish') 
+                    ? (publishType === 'now' ? 'Publier maintenant' : 'Programmer la publication')
+                    : (publishType === 'now' ? 'Soumettre pour approbation' : 'Programmer pour approbation')
+                )}
+            </Button>
+              
+              {/* Bouton Régénérer les captions - visible seulement si des captions ont été générées */}
+              {generatedCaptions && (
+            <Button 
                   onClick={() => setGeneratedCaptions(null)}
                   variant="outline"
                   className="w-full"
-                >
+            >
                   Régénérer les captions
             </Button>
-                
-            <Button 
-                  onClick={publishPosts}
-                  disabled={
-                    selectedPlatforms.length === 0 || 
-                    isPublishing || 
-                    (publishType === 'scheduled' && !scheduledDateTime)
-                  }
-                  className={`w-full font-semibold py-3 ${
-                    publishType === 'now' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
-                >
-                  {isPublishing ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      {publishType === 'now' ? 'Publication...' : 'Programmation...'}
-                    </div>
-                  ) : (
-                    publishType === 'now' ? 'Publier maintenant' : 'Programmer la publication'
-                  )}
-            </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

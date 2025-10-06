@@ -3,8 +3,11 @@ import { Post, SocialPlatform } from '@/types/Post';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Eye, Edit, Copy, Trash2 } from 'lucide-react';
+import { Eye, Edit, Copy, Trash2, User } from 'lucide-react';
 import { useImageLoader } from '@/hooks/useImageLoader';
+import { useAuth } from '@/hooks/useAuth';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 
 // Platform icons mapping
 const PlatformIcons = {
@@ -91,10 +94,15 @@ const PostCard: React.FC<PostCardProps> = memo(({
   onPreview,
   onEdit,
   onDuplicate,
-  onDelete
+  onDelete 
 }) => {
   // Utilisation du hook personnalisé pour gérer l'image
   const { imageUrl, isLoading, error } = useImageLoader(post.image);
+  
+  // Vérification des permissions
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission('canPublish');
+  const canDelete = hasPermission('canDelete');
 
   const formatTime = (date: Date) => {
     return format(date, 'HH:mm', { locale: fr });
@@ -160,28 +168,29 @@ const PostCard: React.FC<PostCardProps> = memo(({
               ) : error ? (
                 <div className="w-full h-full flex items-center justify-center bg-red-50 text-red-500 text-xs">
                   Erreur image
-                </div>
+      </div>
               ) : (
-                <img 
+          <img 
                   src={imageUrl} 
-                  alt="Post content" 
+            alt="Post content" 
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     console.warn('Erreur de chargement de l\'image:', error);
                   }}
-                />
+          />
               )}
-              {post.platforms.length > 1 && (
+          {post.platforms.length > 1 && (
                 <div className="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 py-0.5 rounded">
-                  +{post.platforms.length - 1}
-                </div>
-              )}
+              +{post.platforms.length - 1}
+            </div>
+          )}
             </div>
           )}
         </div>
 
         {/* Actions */}
         <div className="flex items-center justify-center gap-2 mb-2">
+          {/* Aperçu - toujours disponible */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -192,16 +201,37 @@ const PostCard: React.FC<PostCardProps> = memo(({
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit?.(post);
-            }}
-            className="p-1.5 rounded hover:bg-green-100 hover:text-green-600 transition-colors"
-            title="Éditer"
-          >
-            <Edit className="w-3.5 h-3.5" />
-          </button>
+          
+          {/* Éditer - restriction par rôle */}
+          {canEdit ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(post);
+              }}
+              className="p-1.5 rounded hover:bg-green-100 hover:text-green-600 transition-colors"
+              title="Éditer"
+            >
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  disabled
+                  className="p-1.5 rounded opacity-50 cursor-not-allowed"
+                  title="Éditer"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Vous n'avez pas la permission d'éditer
+              </TooltipContent>
+            </Tooltip>
+          )}
+          
+          {/* Dupliquer - toujours disponible */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -212,18 +242,37 @@ const PostCard: React.FC<PostCardProps> = memo(({
           >
             <Copy className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm('Êtes-vous sûr de vouloir supprimer ce post ?')) {
-                onDelete?.(post);
-              }
-            }}
-            className="p-1.5 rounded hover:bg-red-100 hover:text-red-600 transition-colors"
-            title="Supprimer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          
+          {/* Supprimer - restriction par rôle */}
+          {canDelete ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm('Êtes-vous sûr de vouloir supprimer ce post ?')) {
+                  onDelete?.(post);
+                }
+              }}
+              className="p-1.5 rounded hover:bg-red-100 hover:text-red-600 transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  disabled
+                  className="p-1.5 rounded opacity-50 cursor-not-allowed"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Vous n'avez pas la permission de supprimer
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
        

@@ -1,11 +1,14 @@
 import React, { useState, memo, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Edit3, Calendar, Clock, FileText, CheckCircle, XCircle, Megaphone, 
-  Search, Archive, Instagram, Rss, AlertTriangle, Menu, BarChart3, FolderOpen, Target, Hash
+  Calendar, Clock, FolderOpen, Target, Hash, LayoutDashboard, Users, 
+  BarChart3, Menu, UserPlus, Search, TrendingUp, Crown, Shield, Pencil, Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import UserMenu from './UserMenu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,25 +22,36 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Hooks React Router
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser, hasPermission } = useAuth();
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Déterminer la page active basée sur l'URL
   const activePage = useMemo(() => {
     const path = location.pathname;
+    
+    if (path === '/dashboard') return 'dashboard';
+    if (path === '/calendar') return 'calendar';
     if (path === '/analytics') return 'analytics';
     if (path === '/hashtags') return 'hashtags';
     if (path === '/queue') return 'queue';
     if (path === '/archives') return 'archives';
     if (path === '/competitors') return 'competitors';
-    return 'calendar';
+    if (path === '/team') return 'team';
+    if (path === '/settings/accounts') return 'accounts';
+    if (path === '/leads') return 'leads';
+    
+    return 'dashboard'; // Par défaut sur dashboard
   }, [location.pathname]);
 
   // Callbacks optimisés pour la sidebar
   const handlePageChange = useCallback((page: string) => {
     switch (page) {
+      case 'dashboard':
+        navigate('/dashboard');
+        break;
       case 'calendar':
-        navigate('/');
+        navigate('/calendar');
         break;
       case 'analytics':
         navigate('/analytics');
@@ -54,8 +68,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case 'competitors':
         navigate('/competitors');
         break;
+      case 'leads':
+        navigate('/leads');
+        break;
       default:
-        navigate('/');
+        navigate('/dashboard');
     }
   }, [navigate]);
 
@@ -70,27 +87,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     onPageChange: (page: string) => void;
     onToggleCollapse: () => void;
   }>(({ sidebarCollapsed, activePage, onPageChange, onToggleCollapse }) => {
-    const sidebarItems = [
-      { id: 'publishing', label: 'Publication', icon: Edit3, active: activePage === 'publishing' },
-      { id: 'calendar', label: 'Calendrier', icon: Calendar, active: activePage === 'calendar' },
-      { id: 'analytics', label: 'Analytics', icon: BarChart3, active: activePage === 'analytics' },
-      { id: 'hashtags', label: 'Hashtags', icon: Hash, active: activePage === 'hashtags' },
-      { id: 'queue', label: 'File d\'attente', icon: Clock, count: 12, active: activePage === 'queue' },
-      { id: 'archives', label: 'Archives', icon: FolderOpen, active: activePage === 'archives' },
-      { id: 'competitors', label: 'Concurrents', icon: Target, active: activePage === 'competitors' },
-      { id: 'drafts', label: 'Brouillons', icon: FileText, count: 3, active: activePage === 'drafts' },
-      { id: 'published', label: 'Publié', icon: CheckCircle, count: 45, active: activePage === 'published' },
-      { id: 'failed', label: 'Échec', icon: XCircle, count: 2, active: activePage === 'failed' },
-      { id: 'campaigns', label: 'Campagnes', icon: Megaphone, active: activePage === 'campaigns' },
-      { id: 'discovery', label: 'Découverte', icon: Search, active: activePage === 'discovery' },
+    // Items de sidebar avec vérification des permissions
+    const allSidebarItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, active: activePage === 'dashboard', permission: null },
+      { id: 'calendar', label: 'Calendrier', icon: Calendar, active: activePage === 'calendar', permission: 'canSchedule' },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3, active: activePage === 'analytics', permission: 'canViewAnalytics' },
+      { id: 'hashtags', label: 'Hashtags', icon: Hash, active: activePage === 'hashtags', permission: 'canViewAnalytics' },
+      { id: 'queue', label: 'File d\'attente', icon: Clock, count: 12, active: activePage === 'queue', permission: 'canApproveContent' },
+      { id: 'archives', label: 'Archives', icon: FolderOpen, active: activePage === 'archives', permission: 'canPublish' },
+      { id: 'competitors', label: 'Concurrents', icon: Target, active: activePage === 'competitors', permission: 'canViewAnalytics' },
+      { id: 'team', label: 'Équipe', icon: Users, active: activePage === 'team', permission: 'canManageUsers' },
+      { id: 'accounts', label: 'Comptes Sociaux', icon: Users, active: activePage === 'accounts', permission: 'canManageAccounts' },
+      { id: 'leads', label: 'Lead Generation', icon: UserPlus, active: activePage === 'leads', permission: 'canPublish' },
     ];
 
-    const socialItems = [
-      { id: 'instagram', label: 'Instagram', icon: Instagram, count: 15 },
-      { id: 'facebook', label: 'Facebook', count: 8 },
-      { id: 'twitter', label: 'Twitter', icon: Rss, count: 3 },
-      { id: 'linkedin', label: 'LinkedIn', icon: Rss, count: 2 },
-    ];
+    // Filtrer les items selon les permissions
+    const sidebarItems = allSidebarItems.filter(item => {
+      if (!item.permission) return true; // Toujours visible
+      return hasPermission(item.permission as any);
+    });
+
 
     return (
       <div className={cn(
@@ -117,13 +133,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 // Déterminer l'URL basée sur l'ID de l'item
                 const getItemUrl = (id: string) => {
                   switch (id) {
-                    case 'calendar': return '/';
+                    case 'dashboard': return '/dashboard';
+                    case 'calendar': return '/calendar';
                     case 'analytics': return '/analytics';
                     case 'hashtags': return '/hashtags';
                     case 'queue': return '/queue';
                     case 'archives': return '/archives';
                     case 'competitors': return '/competitors';
-                    default: return '/';
+                    case 'users': return '/users';
+                    case 'team': return '/team';
+                    case 'accounts': return '/settings/accounts';
+                    case 'leads': return '/leads';
+                    case 'leads-analytics': return '/leads/analytics';
+                    case 'leads-search': return '/leads/search';
+                    default: return '/dashboard';
                   }
                 };
 
@@ -154,30 +177,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               })}
             </div>
 
-            {/* Social Networks */}
-            {!sidebarCollapsed && (
-              <div className="mt-8">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                  Réseaux sociaux
-                </h3>
-                <div className="space-y-1">
-                  {socialItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors cursor-pointer"
-                    >
-                      {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {item.count && (
-                        <span className="bg-gray-600 text-xs px-2 py-1 rounded-full">
-                          {item.count}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -221,12 +220,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Button>
               
               <h1 className="text-lg font-semibold text-gray-900">
+                {activePage === 'dashboard' && 'Dashboard'}
                 {activePage === 'calendar' && 'Calendrier'}
                 {activePage === 'analytics' && 'Analytics'}
+                {activePage === 'hashtags' && 'Hashtags'}
                 {activePage === 'queue' && 'File d\'attente'}
                 {activePage === 'archives' && 'Archives'}
                 {activePage === 'competitors' && 'Concurrents'}
+                {activePage === 'team' && 'Équipe'}
+                {activePage === 'accounts' && 'Comptes Sociaux'}
+                {activePage === 'leads' && 'Lead Generation'}
               </h1>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <UserMenu />
             </div>
           </div>
         </div>
