@@ -106,7 +106,7 @@ export const useAuth = (): UseAuthReturn => {
       }
     };
 
-    return rolePermissions[user.role][permission] || false;
+    return rolePermissions[user.role]?.[permission] || false;
   };
 
   // Vérifier le rôle
@@ -157,7 +157,7 @@ export const useAuth = (): UseAuthReturn => {
     isManager: currentRole === 'manager',
     isCreator: currentRole === 'creator',
     isViewer: currentRole === 'viewer',
-    isAdmin: currentRole === 'owner' || currentRole === 'manager',
+    isAdmin: currentRole === 'owner' || currentRole === 'manager', // Maintenant exporté
     canAccess
   };
 };

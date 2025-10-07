@@ -9,18 +9,26 @@ export interface Post {
   platforms: SocialPlatform[];
   status: PostStatus;
   image?: string;
+  images?: string[];
   campaign?: string;
   campaignColor?: string;
   author: string;
   captions?: { [key: string]: string }; // Captions générées par IA pour chaque plateforme
+  dayColumn: string; // e.g., 'sunday', 'monday', etc.
+  timeSlot: number; // position in the day column
+  
+  // Métriques d'engagement
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  views?: number;
+  reach?: number;
   engagement?: {
     likes: number;
     comments: number;
     shares: number;
     views: number;
   };
-  dayColumn: string; // e.g., 'sunday', 'monday', etc.
-  timeSlot: number; // position in the day column
 }
 
 export interface Campaign {

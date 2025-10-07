@@ -3,7 +3,10 @@
  * Phase 3: Analytics Interface
  */
 
-import { SocialPlatform } from './socialAccount';
+import { SocialPlatform } from './Post';
+
+// Export for external use
+export type { SocialPlatform };
 
 export interface PostAnalytics {
   postId: string;
