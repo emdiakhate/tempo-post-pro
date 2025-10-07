@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
-import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -15,12 +14,13 @@ import Analytics from "./pages/Analytics";
 import QueuePage from "./pages/QueuePage";
 import ArchivesPage from "./pages/ArchivesPage";
 import CompetitiveIntelligence from "./pages/CompetitiveIntelligence";
-import HashtagTracker from "./pages/HashtagTracker";
 import TeamPage from "./pages/TeamPage";
 import LoginPage from "./pages/LoginPage";
 import LogoutPage from "./pages/LogoutPage";
 import SocialAccountsPage from "./pages/SocialAccountsPage";
 import LeadsPage from "./pages/LeadsPage";
+import PublicationsPage from "./pages/PublicationsPage";
+import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -33,13 +33,14 @@ function MainLayout() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/calendar" element={<Index />} />
         <Route path="/analytics" element={<Analytics />} />
-        <Route path="/hashtags" element={<HashtagTracker />} />
         <Route path="/queue" element={<QueuePage />} />
         <Route path="/archives" element={<ArchivesPage />} />
         <Route path="/competitors" element={<CompetitiveIntelligence />} />
         <Route path="/team" element={<TeamPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/accounts" element={<SocialAccountsPage />} />
         <Route path="/leads" element={<LeadsPage />} />
+        <Route path="/publications" element={<PublicationsPage />} />
         <Route path="/post/:id" element={<PostDetailPage />} />
         {/* 404 */}
         <Route path="*" element={<Navigate to="/calendar" replace />} />
@@ -77,11 +78,9 @@ function App() {
       <TooltipProvider>
         <UserProvider>
           <BrowserRouter>
-            <AuthProvider>
-              <Toaster />
-              <Sonner />
-              <ProtectedRoutes />
-            </AuthProvider>
+            <Toaster />
+            <Sonner />
+            <ProtectedRoutes />
           </BrowserRouter>
         </UserProvider>
       </TooltipProvider>

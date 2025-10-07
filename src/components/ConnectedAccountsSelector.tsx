@@ -93,21 +93,46 @@ const ConnectedAccountsSelector: React.FC<ConnectedAccountsSelectorProps> = ({
     window.location.href = '/settings/accounts';
   };
 
+  // Affichage des plateformes même sans comptes connectés
+  const platforms = [
+    { id: 'instagram', name: 'Instagram', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'facebook', name: 'Facebook', color: 'bg-blue-600' },
+    { id: 'twitter', name: 'X (Twitter)', color: 'bg-black' },
+    { id: 'linkedin', name: 'LinkedIn', color: 'bg-blue-700' },
+    { id: 'youtube', name: 'YouTube', color: 'bg-red-600' },
+    { id: 'tiktok', name: 'TikTok', color: 'bg-black' },
+  ];
+
+  const handlePlatformToggle = (platformId: string) => {
+    if (selectedAccounts.includes(platformId)) {
+      onAccountsChange(selectedAccounts.filter(p => p !== platformId));
+    } else {
+      onAccountsChange([...selectedAccounts, platformId]);
+    }
+  };
+
   if (connectedAccounts.length === 0) {
     return (
       <div className={cn("space-y-4", className)}>
-        <div className="text-center py-8">
-          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Aucun compte connecté
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Connectez vos comptes sociaux pour publier du contenu.
-          </p>
-          <Button onClick={handleConnectAccounts}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Connecter maintenant
-          </Button>
+        <div className="space-y-3">
+          <label className="block text-sm font-medium">Plateformes</label>
+          <div className="flex flex-wrap gap-2">
+            {platforms.map((platform) => (
+              <button
+                key={platform.id}
+                onClick={() => handlePlatformToggle(platform.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium text-white transition-all",
+                  platform.color,
+                  selectedAccounts.includes(platform.id) 
+                    ? "ring-2 ring-offset-2 ring-blue-500" 
+                    : "opacity-70 hover:opacity-100"
+                )}
+              >
+                {platform.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );

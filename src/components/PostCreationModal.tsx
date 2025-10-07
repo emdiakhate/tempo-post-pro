@@ -223,6 +223,22 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
   // États pour le tone de voix
   const [selectedTone, setSelectedTone] = useState<string>('automatic');
 
+  // Synchroniser selectedAccounts avec selectedPlatforms pour l'aperçu
+  useEffect(() => {
+    if (selectedAccounts.length > 0) {
+      // Convertir les IDs de comptes en plateformes
+      const platforms = selectedAccounts.map(accountId => {
+        // Pour l'instant, on utilise directement les IDs comme plateformes
+        // Dans une vraie implémentation, on récupérerait la plateforme depuis les données du compte
+        return accountId;
+      });
+      setSelectedPlatforms(platforms);
+    } else {
+      // Si aucun compte sélectionné, réinitialiser à Instagram par défaut
+      setSelectedPlatforms(['instagram']);
+    }
+  }, [selectedAccounts]);
+
   // Effet pour charger les données initiales en mode édition
   useEffect(() => {
     if (isEditing && initialData) {

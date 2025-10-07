@@ -58,8 +58,7 @@ const UserMenu: React.FC = () => {
   };
 
   const handleSettings = () => {
-    // TODO: Naviguer vers les paramètres
-    console.log('Paramètres');
+    navigate('/settings');
   };
 
   if (!currentUser) {

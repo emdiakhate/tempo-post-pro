@@ -392,7 +392,7 @@ const Analytics: React.FC = () => {
       {/* Top Performing Posts */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Performing Posts</CardTitle>
+          <CardTitle>Publications les Plus Performantes</CardTitle>
           <CardDescription>
             Vos 5 publications les plus performantes
           </CardDescription>

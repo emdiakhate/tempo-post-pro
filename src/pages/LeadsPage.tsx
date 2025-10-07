@@ -3,7 +3,7 @@
  * Phase 4: Lead Generation System - Page Principale
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   Phone, 
@@ -21,7 +21,14 @@ import {
   Calendar,
   RefreshCw,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Instagram,
+  Facebook,
+  Linkedin,
+  Twitter,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +44,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import LeadSearchForm from '@/components/LeadSearchForm';
 
+const LEADS_PER_PAGE = 10;
+
 const LeadsPage: React.FC = () => {
   const { leads, loading, error, loadLeads, addLead, updateLead, deleteLead } = useLeads();
   const { getStatusColor, getStatusLabel } = useLeadStatus();
@@ -49,6 +58,9 @@ const LeadsPage: React.FC = () => {
   // États de sélection
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
   
   // Filtres
   const [filters, setFilters] = useState({
@@ -75,17 +87,30 @@ const LeadsPage: React.FC = () => {
   };
 
   // Filtrage des leads
-  const filteredLeads = leads.filter(lead => {
-    const matchesStatus = filters.status === 'all' || lead.status === filters.status;
-    const matchesSearch = lead.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         lead.category.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-                         lead.city.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    const matchesEmail = !filters.hasEmail || !!lead.email;
-    const matchesPhone = !filters.hasPhone || !!lead.phone;
-    const matchesSocial = !filters.hasSocial || !!(lead.socialMedia?.instagram || lead.socialMedia?.facebook);
-    
-    return matchesStatus && matchesSearch && matchesEmail && matchesPhone && matchesSocial;
-  });
+  const filteredLeads = useMemo(() => {
+    return leads.filter(lead => {
+      const matchesStatus = filters.status === 'all' || lead.status === filters.status;
+      const matchesSearch = lead.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                           lead.category.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+                           lead.city.toLowerCase().includes(filters.searchTerm.toLowerCase());
+      const matchesEmail = !filters.hasEmail || !!lead.email;
+      const matchesPhone = !filters.hasPhone || !!lead.phone;
+      const matchesSocial = !filters.hasSocial || !!(lead.socialMedia?.instagram || lead.socialMedia?.facebook || lead.socialMedia?.linkedin || lead.socialMedia?.twitter);
+      
+      return matchesStatus && matchesSearch && matchesEmail && matchesPhone && matchesSocial;
+    });
+  }, [leads, filters]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredLeads.length / LEADS_PER_PAGE);
+  const startIndex = (currentPage - 1) * LEADS_PER_PAGE;
+  const endIndex = startIndex + LEADS_PER_PAGE;
+  const paginatedLeads = filteredLeads.slice(startIndex, endIndex);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   // Gestion de la sélection
   const handleSelectLead = (leadId: string) => {
@@ -97,10 +122,10 @@ const LeadsPage: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedLeads.length === filteredLeads.length) {
+    if (selectedLeads.length === paginatedLeads.length) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(filteredLeads.map(lead => lead.id));
+      setSelectedLeads(paginatedLeads.map(lead => lead.id));
     }
   };
 
@@ -341,69 +366,57 @@ const LeadsPage: React.FC = () => {
         </Card>
       </Collapsible>
 
-      {/* Filtres et recherche */}
+
+      {/* Filtres */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex items-center gap-4">
+            {/* Recherche */}
             <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Rechercher par nom, catégorie, ville..."
-                  value={filters.searchTerm}
-                  onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                  className="pl-10"
-                />
-              </div>
+              <Input
+                placeholder="Rechercher par nom, catégorie, ville..."
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+              />
             </div>
             
-            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value as LeadStatus | 'all' }))}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="new">Nouveau</SelectItem>
-                <SelectItem value="contacted">Contacté</SelectItem>
-                <SelectItem value="interested">Intéressé</SelectItem>
-                <SelectItem value="client">Client</SelectItem>
-                <SelectItem value="not_interested">Pas intéressé</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="hasEmail"
-                  checked={filters.hasEmail}
-                  onCheckedChange={(checked) => setFilters(prev => ({ ...prev, hasEmail: !!checked }))}
-                />
-                <label htmlFor="hasEmail" className="text-sm">Email</label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="hasPhone"
-                  checked={filters.hasPhone}
-                  onCheckedChange={(checked) => setFilters(prev => ({ ...prev, hasPhone: !!checked }))}
-                />
-                <label htmlFor="hasPhone" className="text-sm">Téléphone</label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="hasSocial"
-                  checked={filters.hasSocial}
-                  onCheckedChange={(checked) => setFilters(prev => ({ ...prev, hasSocial: !!checked }))}
-                />
-                <label htmlFor="hasSocial" className="text-sm">Réseaux sociaux</label>
-              </div>
+            {/* Filtres rapides */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Filtrer:</span>
+              <Button 
+                variant={filters.hasEmail ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setFilters({ ...filters, hasEmail: !filters.hasEmail })}
+                className="gap-2"
+              >
+                <Mail className="w-4 h-4" /> Email {filters.hasEmail && <X className="w-3 h-3" />}
+              </Button>
+              <Button 
+                variant={filters.hasPhone ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setFilters({ ...filters, hasPhone: !filters.hasPhone })}
+                className="gap-2"
+              >
+                <Phone className="w-4 h-4" /> Téléphone {filters.hasPhone && <X className="w-3 h-3" />}
+              </Button>
+              <Button 
+                variant={filters.hasSocial ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setFilters({ ...filters, hasSocial: !filters.hasSocial })}
+                className="gap-2"
+              >
+                <Instagram className="w-4 h-4" /> Réseaux sociaux {filters.hasSocial && <X className="w-3 h-3" />}
+              </Button>
+              {(filters.hasEmail || filters.hasPhone || filters.hasSocial || filters.searchTerm) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setFilters({ status: 'all', hasEmail: false, hasPhone: false, hasSocial: false, searchTerm: '' })}
+                >
+                  Réinitialiser
+                </Button>
+              )}
             </div>
-            
-            <Button variant="outline" size="sm" onClick={loadLeads}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Actualiser
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -426,7 +439,7 @@ const LeadsPage: React.FC = () => {
                   size="sm"
                   onClick={handleSelectAll}
                 >
-                  {selectedLeads.length === filteredLeads.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  {selectedLeads.length === paginatedLeads.length ? 'Tout désélectionner' : 'Tout sélectionner'}
                 </Button>
                 
                 {selectedLeads.length > 0 && (
@@ -466,19 +479,70 @@ const LeadsPage: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredLeads.map((lead) => (
-                <LeadRow 
-                  key={lead.id} 
-                  lead={lead}
-                  isSelected={selectedLeads.includes(lead.id)}
-                  onSelect={() => handleSelectLead(lead.id)}
-                  onView={() => setSelectedLead(lead)}
-                  getStatusColor={getStatusColor}
-                  getStatusLabel={getStatusLabel}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4">
+                {paginatedLeads.map((lead) => (
+                  <LeadRow 
+                    key={lead.id} 
+                    lead={lead}
+                    isSelected={selectedLeads.includes(lead.id)}
+                    onSelect={() => handleSelectLead(lead.id)}
+                    onView={() => setSelectedLead(lead)}
+                    getStatusColor={getStatusColor}
+                    getStatusLabel={getStatusLabel}
+                  />
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t mt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Page {currentPage} sur {totalPages}
+                    <span className="ml-2">({startIndex + 1}-{Math.min(endIndex, filteredLeads.length)} sur {filteredLeads.length})</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Précédent
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                        .map((page, index, arr) => {
+                          const prevPage = arr[index - 1];
+                          const showEllipsis = prevPage && page - prevPage > 1;
+                          return (
+                            <div key={page} className="flex items-center gap-1">
+                              {showEllipsis && (<span className="px-2 text-muted-foreground">...</span>)}
+                              <Button 
+                                variant={currentPage === page ? 'default' : 'outline'} 
+                                size="sm" 
+                                onClick={() => setCurrentPage(page)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {page}
+                              </Button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                      disabled={currentPage === totalPages}
+                    >
+                      Suivant <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -504,6 +568,21 @@ const LeadRow: React.FC<LeadRowProps> = ({
   getStatusColor, 
   getStatusLabel 
 }) => {
+  // Fonction pour formater les nombres
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
+
+  // Configuration des icônes de réseaux sociaux
+  const socialIcons = {
+    instagram: { icon: Instagram, color: 'text-pink-500', bg: 'bg-pink-50' },
+    facebook: { icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
+    linkedin: { icon: Linkedin, color: 'text-blue-700', bg: 'bg-blue-50' },
+    twitter: { icon: Twitter, color: 'text-blue-400', bg: 'bg-blue-50' }
+  };
+
   return (
     <Card className={cn(
       "hover:shadow-md transition-shadow",
@@ -549,12 +628,37 @@ const LeadRow: React.FC<LeadRowProps> = ({
                     <span>{lead.email}</span>
                   </div>
                 )}
-                
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(lead.addedAt).toLocaleDateString('fr-FR')}</span>
-                </div>
               </div>
+              
+              {/* Réseaux sociaux avec métriques */}
+              {lead.socialMedia && (
+                <div className="flex items-center gap-2 mt-2">
+                  {Object.entries(lead.socialMedia).map(([platform, handle]) => {
+                    const config = socialIcons[platform as keyof typeof socialIcons];
+                    if (!config || !handle) return null;
+                    
+                    const Icon = config.icon;
+                    const metrics = lead.metrics;
+                    const followerKey = `${platform}Followers` as keyof typeof metrics;
+                    const likeKey = `${platform}Likes` as keyof typeof metrics;
+                    const followers = metrics?.[followerKey] || metrics?.[likeKey] || 0;
+                    
+                    return (
+                      <div key={platform} className="flex items-center gap-1">
+                        <div className={cn(
+                          "w-6 h-6 rounded flex items-center justify-center",
+                          config.bg
+                        )}>
+                          <Icon className={cn("w-4 h-4", config.color)} />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {followers > 0 ? formatNumber(followers) : ''}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           
@@ -564,13 +668,17 @@ const LeadRow: React.FC<LeadRowProps> = ({
               Voir
             </Button>
             
-            <Button variant="outline" size="sm">
-              <Mail className="w-4 h-4" />
-            </Button>
+            {lead.email && (
+              <Button variant="outline" size="sm">
+                <Mail className="w-4 h-4" />
+              </Button>
+            )}
             
-            <Button variant="outline" size="sm">
-              <Phone className="w-4 h-4" />
-            </Button>
+            {lead.phone && (
+              <Button variant="outline" size="sm">
+                <Phone className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

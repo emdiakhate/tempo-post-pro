@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, Clock, FolderOpen, Target, Hash, LayoutDashboard, Users, 
-  BarChart3, Menu, UserPlus, Search, TrendingUp, Crown, Shield, Pencil, Eye
+  BarChart3, Menu, UserPlus, Search, TrendingUp, Crown, Shield, Pencil, Eye, FileText, Settings, LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserMenu from './UserMenu';
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Hooks React Router
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, hasPermission } = useAuth();
+  const { hasPermission } = useAuth();
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
@@ -33,13 +33,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (path === '/dashboard') return 'dashboard';
     if (path === '/calendar') return 'calendar';
     if (path === '/analytics') return 'analytics';
-    if (path === '/hashtags') return 'hashtags';
     if (path === '/queue') return 'queue';
     if (path === '/archives') return 'archives';
     if (path === '/competitors') return 'competitors';
     if (path === '/team') return 'team';
+    if (path === '/settings') return 'settings';
     if (path === '/settings/accounts') return 'accounts';
     if (path === '/leads') return 'leads';
+    if (path === '/publications') return 'publications';
     
     return 'dashboard'; // Par défaut sur dashboard
   }, [location.pathname]);
@@ -56,9 +57,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       case 'analytics':
         navigate('/analytics');
         break;
-      case 'hashtags':
-        navigate('/hashtags');
-        break;
       case 'queue':
         navigate('/queue');
         break;
@@ -70,6 +68,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         break;
       case 'leads':
         navigate('/leads');
+        break;
+      case 'publications':
+        navigate('/publications');
+        break;
+      case 'settings':
+        navigate('/settings');
+        break;
+      case 'logout':
+        navigate('/logout');
         break;
       default:
         navigate('/dashboard');
@@ -92,13 +99,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, active: activePage === 'dashboard', permission: null },
       { id: 'calendar', label: 'Calendrier', icon: Calendar, active: activePage === 'calendar', permission: 'canSchedule' },
       { id: 'analytics', label: 'Analytics', icon: BarChart3, active: activePage === 'analytics', permission: 'canViewAnalytics' },
-      { id: 'hashtags', label: 'Hashtags', icon: Hash, active: activePage === 'hashtags', permission: 'canViewAnalytics' },
       { id: 'queue', label: 'File d\'attente', icon: Clock, count: 12, active: activePage === 'queue', permission: 'canApproveContent' },
       { id: 'archives', label: 'Archives', icon: FolderOpen, active: activePage === 'archives', permission: 'canPublish' },
       { id: 'competitors', label: 'Concurrents', icon: Target, active: activePage === 'competitors', permission: 'canViewAnalytics' },
       { id: 'team', label: 'Équipe', icon: Users, active: activePage === 'team', permission: 'canManageUsers' },
       { id: 'accounts', label: 'Comptes Sociaux', icon: Users, active: activePage === 'accounts', permission: 'canManageAccounts' },
       { id: 'leads', label: 'Lead Generation', icon: UserPlus, active: activePage === 'leads', permission: 'canPublish' },
+      { id: 'publications', label: 'Mes Publications', icon: FileText, active: activePage === 'publications', permission: 'canPublish' },
+      { id: 'settings', label: 'Paramètres', icon: Settings, active: activePage === 'settings', permission: null },
+      { id: 'logout', label: 'Déconnexion', icon: LogOut, active: false, permission: null },
     ];
 
     // Filtrer les items selon les permissions
@@ -136,7 +145,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     case 'dashboard': return '/dashboard';
                     case 'calendar': return '/calendar';
                     case 'analytics': return '/analytics';
-                    case 'hashtags': return '/hashtags';
+                    case 'publications': return '/publications';
+                    case 'logout': return '/logout';
+                    case 'settings': return '/settings';
                     case 'queue': return '/queue';
                     case 'archives': return '/archives';
                     case 'competitors': return '/competitors';
@@ -223,13 +234,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {activePage === 'dashboard' && 'Dashboard'}
                 {activePage === 'calendar' && 'Calendrier'}
                 {activePage === 'analytics' && 'Analytics'}
-                {activePage === 'hashtags' && 'Hashtags'}
                 {activePage === 'queue' && 'File d\'attente'}
                 {activePage === 'archives' && 'Archives'}
                 {activePage === 'competitors' && 'Concurrents'}
                 {activePage === 'team' && 'Équipe'}
                 {activePage === 'accounts' && 'Comptes Sociaux'}
                 {activePage === 'leads' && 'Lead Generation'}
+                {activePage === 'publications' && 'Mes Publications'}
+                {activePage === 'settings' && 'Paramètres'}
               </h1>
             </div>
             
