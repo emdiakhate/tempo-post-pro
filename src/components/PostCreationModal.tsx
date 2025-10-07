@@ -2,7 +2,7 @@ import React, { useState, useEffect, memo, useCallback } from 'react';
 import { X, Upload, Image as ImageIcon, Calendar, Clock, TrendingUp, Lightbulb, Hash, Copy, Plus, Briefcase, Smile, Zap, DollarSign, BookOpen, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';

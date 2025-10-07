@@ -1,78 +1,193 @@
 /**
- * Configuration centralisée des plateformes sociales
- * Évite la duplication de code et facilite la maintenance
+ * Configuration Centralisée des Plateformes Sociales
+ * Remplace toutes les configurations dupliquées
  */
 
-import { SocialPlatform } from '@/types/Post';
+import { PLATFORM_COLORS } from './designSystem';
 
 export interface PlatformConfig {
-  id: SocialPlatform;
+  id: string;
   name: string;
-  colorClass: string;
-  bgClass: string;
-  textClass: string;
+  description: string;
+  icon: string;
+  color: string;
+  gradient?: string;
+  isSupported: boolean;
+  isProOnly: boolean;
+  features: {
+    posts: boolean;
+    stories: boolean;
+    reels: boolean;
+    live: boolean;
+    analytics: boolean;
+  };
+  limits: {
+    maxPostsPerDay: number;
+    maxCharacters: number;
+    maxImages: number;
+    maxVideos: number;
+  };
 }
 
-/**
- * Configuration des plateformes sociales
- * Utilise le design system pour les couleurs
- */
-export const PLATFORMS: PlatformConfig[] = [
-  {
+export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
+  instagram: {
     id: 'instagram',
     name: 'Instagram',
-    colorClass: 'text-social-instagram',
-    bgClass: 'bg-social-instagram',
-    textClass: 'text-white'
+    description: 'Partagez vos moments avec des photos et vidéos',
+    icon: 'Instagram',
+    color: '#E4405F',
+    gradient: 'from-purple-500 to-pink-500',
+    isSupported: true,
+    isProOnly: false,
+    features: {
+      posts: true,
+      stories: true,
+      reels: true,
+      live: true,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 25,
+      maxCharacters: 2200,
+      maxImages: 10,
+      maxVideos: 1
+    }
   },
-  {
+  facebook: {
     id: 'facebook',
     name: 'Facebook',
-    colorClass: 'text-social-facebook',
-    bgClass: 'bg-social-facebook',
-    textClass: 'text-white'
+    description: 'Connectez-vous avec votre communauté',
+    icon: 'Facebook',
+    color: '#1877F2',
+    isSupported: true,
+    isProOnly: false,
+    features: {
+      posts: true,
+      stories: true,
+      reels: false,
+      live: true,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 25,
+      maxCharacters: 63206,
+      maxImages: 10,
+      maxVideos: 1
+    }
   },
-  {
+  twitter: {
     id: 'twitter',
     name: 'X (Twitter)',
-    colorClass: 'text-social-twitter',
-    bgClass: 'bg-social-twitter',
-    textClass: 'text-white'
+    description: 'Partagez vos pensées en temps réel',
+    icon: 'Twitter',
+    color: '#1DA1F2',
+    isSupported: true,
+    isProOnly: false,
+    features: {
+      posts: true,
+      stories: false,
+      reels: false,
+      live: false,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 300,
+      maxCharacters: 280,
+      maxImages: 4,
+      maxVideos: 1
+    }
   },
-  {
+  linkedin: {
     id: 'linkedin',
     name: 'LinkedIn',
-    colorClass: 'text-social-linkedin',
-    bgClass: 'bg-social-linkedin',
-    textClass: 'text-white'
+    description: 'Développez votre réseau professionnel',
+    icon: 'Linkedin',
+    color: '#0A66C2',
+    isSupported: true,
+    isProOnly: false,
+    features: {
+      posts: true,
+      stories: false,
+      reels: false,
+      live: false,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 25,
+      maxCharacters: 3000,
+      maxImages: 9,
+      maxVideos: 1
+    }
   },
-  {
-    id: 'youtube',
-    name: 'YouTube',
-    colorClass: 'text-social-youtube',
-    bgClass: 'bg-social-youtube',
-    textClass: 'text-white'
-  },
-  {
+  tiktok: {
     id: 'tiktok',
     name: 'TikTok',
-    colorClass: 'text-social-tiktok',
-    bgClass: 'bg-social-tiktok',
-    textClass: 'text-white'
+    description: 'Créez des vidéos courtes et engageantes',
+    icon: 'TikTok',
+    color: '#000000',
+    isSupported: true,
+    isProOnly: true,
+    features: {
+      posts: false,
+      stories: false,
+      reels: true,
+      live: true,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 10,
+      maxCharacters: 2200,
+      maxImages: 0,
+      maxVideos: 1
+    }
+  },
+  youtube: {
+    id: 'youtube',
+    name: 'YouTube',
+    description: 'Partagez vos vidéos avec le monde',
+    icon: 'Youtube',
+    color: '#FF0000',
+    isSupported: true,
+    isProOnly: true,
+    features: {
+      posts: false,
+      stories: false,
+      reels: false,
+      live: true,
+      analytics: true
+    },
+    limits: {
+      maxPostsPerDay: 5,
+      maxCharacters: 5000,
+      maxImages: 0,
+      maxVideos: 1
+    }
   }
-];
-
-/**
- * Récupère la configuration d'une plateforme
- */
-export const getPlatformConfig = (platformId: SocialPlatform): PlatformConfig => {
-  return PLATFORMS.find(p => p.id === platformId) || PLATFORMS[0];
 };
 
-/**
- * Map des plateformes par ID
- */
-export const PLATFORMS_MAP = PLATFORMS.reduce((acc, platform) => {
-  acc[platform.id] = platform;
-  return acc;
-}, {} as Record<SocialPlatform, PlatformConfig>);
+// Helper functions
+export const getPlatformConfig = (platformId: string): PlatformConfig | undefined => {
+  return PLATFORM_CONFIGS[platformId];
+};
+
+export const getSupportedPlatforms = (): PlatformConfig[] => {
+  return Object.values(PLATFORM_CONFIGS).filter(platform => platform.isSupported);
+};
+
+export const getFreePlatforms = (): PlatformConfig[] => {
+  return Object.values(PLATFORM_CONFIGS).filter(platform => platform.isSupported && !platform.isProOnly);
+};
+
+export const getProPlatforms = (): PlatformConfig[] => {
+  return Object.values(PLATFORM_CONFIGS).filter(platform => platform.isProOnly);
+};
+
+export const getPlatformFeatures = (platformId: string) => {
+  const platform = getPlatformConfig(platformId);
+  return platform?.features;
+};
+
+export const getPlatformLimits = (platformId: string) => {
+  const platform = getPlatformConfig(platformId);
+  return platform?.limits;
+};

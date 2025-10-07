@@ -1,84 +1,191 @@
 /**
- * Configuration centralisée des statuts de posts
- * Évite la duplication de code
+ * Configuration Centralisée des Statuts
+ * Remplace toutes les configurations de statuts dupliquées
  */
 
-import { PostStatus } from '@/types/Post';
-import { CheckCircle, Clock, AlertCircle, XCircle, Pause } from 'lucide-react';
+import { STATUS_COLORS } from './designSystem';
 
 export interface StatusConfig {
-  id: PostStatus;
+  id: string;
   label: string;
-  labelFr: string;
-  colorClass: string;
-  bgClass: string;
-  textClass: string;
-  icon: typeof CheckCircle;
+  description: string;
+  color: string;
+  icon: string;
+  isActive: boolean;
+  isEditable: boolean;
+  isDeletable: boolean;
+  permissions: {
+    canView: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canPublish: boolean;
+    canSchedule: boolean;
+  };
 }
 
-/**
- * Configuration des statuts de posts
- * Utilise le design system pour les couleurs
- */
-export const POST_STATUSES: StatusConfig[] = [
-  {
+export const STATUS_CONFIGS: Record<string, StatusConfig> = {
+  published: {
     id: 'published',
-    label: 'Published',
-    labelFr: 'Publié',
-    colorClass: 'text-status-published',
-    bgClass: 'bg-status-published/10',
-    textClass: 'text-status-published',
-    icon: CheckCircle
+    label: 'Publié',
+    description: 'Post publié avec succès',
+    color: 'green',
+    icon: 'CheckCircle',
+    isActive: true,
+    isEditable: false,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: false,
+      canDelete: true,
+      canPublish: false,
+      canSchedule: false
+    }
   },
-  {
+  scheduled: {
     id: 'scheduled',
-    label: 'Scheduled',
-    labelFr: 'Programmé',
-    colorClass: 'text-status-scheduled',
-    bgClass: 'bg-status-scheduled/10',
-    textClass: 'text-status-scheduled',
-    icon: Clock
+    label: 'Programmé',
+    description: 'Post programmé pour publication',
+    color: 'blue',
+    icon: 'Clock',
+    isActive: true,
+    isEditable: true,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: false,
+      canSchedule: true
+    }
   },
-  {
-    id: 'pending',
-    label: 'Pending',
-    labelFr: 'En attente',
-    colorClass: 'text-status-pending',
-    bgClass: 'bg-status-pending/10',
-    textClass: 'text-status-pending',
-    icon: AlertCircle
-  },
-  {
+  draft: {
     id: 'draft',
-    label: 'Draft',
-    labelFr: 'Brouillon',
-    colorClass: 'text-status-draft',
-    bgClass: 'bg-status-draft/10',
-    textClass: 'text-status-draft',
-    icon: Pause
+    label: 'Brouillon',
+    description: 'Post en cours de rédaction',
+    color: 'gray',
+    icon: 'Edit',
+    isActive: true,
+    isEditable: true,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: true,
+      canSchedule: true
+    }
   },
-  {
+  failed: {
     id: 'failed',
-    label: 'Failed',
-    labelFr: 'Échec',
-    colorClass: 'text-status-failed',
-    bgClass: 'bg-status-failed/10',
-    textClass: 'text-status-failed',
-    icon: XCircle
+    label: 'Échec',
+    description: 'Échec de publication',
+    color: 'red',
+    icon: 'XCircle',
+    isActive: false,
+    isEditable: true,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: true,
+      canSchedule: true
+    }
+  },
+  pending: {
+    id: 'pending',
+    label: 'En attente',
+    description: 'En attente de validation',
+    color: 'yellow',
+    icon: 'Clock',
+    isActive: true,
+    isEditable: true,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: false,
+      canSchedule: false
+    }
+  },
+  approved: {
+    id: 'approved',
+    label: 'Approuvé',
+    description: 'Approuvé par le manager',
+    color: 'green',
+    icon: 'CheckCircle',
+    isActive: true,
+    isEditable: false,
+    isDeletable: false,
+    permissions: {
+      canView: true,
+      canEdit: false,
+      canDelete: false,
+      canPublish: true,
+      canSchedule: true
+    }
+  },
+  rejected: {
+    id: 'rejected',
+    label: 'Rejeté',
+    description: 'Rejeté par le manager',
+    color: 'red',
+    icon: 'XCircle',
+    isActive: false,
+    isEditable: true,
+    isDeletable: true,
+    permissions: {
+      canView: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: false,
+      canSchedule: false
+    }
   }
-];
-
-/**
- * Récupère la configuration d'un statut
- */
-export const getStatusConfig = (statusId: PostStatus): StatusConfig => {
-  return POST_STATUSES.find(s => s.id === statusId) || POST_STATUSES[3]; // Default to draft
 };
 
-/**
- * Map des statuts par ID
- */
-export const STATUS_MAP = POST_STATUSES.reduce((acc, status) => {
-  acc[status.id] = status;
-  return acc;
-}, {} as Record<PostStatus, StatusConfig>);
+// Helper functions
+export const getStatusConfig = (statusId: string): StatusConfig | undefined => {
+  return STATUS_CONFIGS[statusId];
+};
+
+export const getStatusColor = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status ? STATUS_COLORS[status.color as keyof typeof STATUS_COLORS] : STATUS_COLORS.draft;
+};
+
+export const getStatusIcon = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.icon || 'Hash';
+};
+
+export const getStatusLabel = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.label || statusId;
+};
+
+export const getStatusDescription = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.description || '';
+};
+
+export const getStatusPermissions = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.permissions;
+};
+
+export const isStatusEditable = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.isEditable || false;
+};
+
+export const isStatusDeletable = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.isDeletable || false;
+};
+
+export const isStatusActive = (statusId: string) => {
+  const status = getStatusConfig(statusId);
+  return status?.isActive || false;
+};

@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, UserRole } from '@/types/user';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { loadUsersFromStorage, saveUsersToStorage, addUser, updateUser, deleteUser } from '@/data/mockUsers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

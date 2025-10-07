@@ -5,7 +5,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Eye, Edit, Copy, Trash2, User } from 'lucide-react';
 import { useImageLoader } from '@/hooks/useImageLoader';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 
