@@ -4,14 +4,14 @@
  */
 
 import { useMemo } from 'react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserRole, UserPermissions, ROLE_PERMISSIONS } from '@/types/user';
 
 /**
  * Hook principal pour les permissions
  */
 export const usePermissions = () => {
-  const { currentUser, hasPermission, canAccess } = useUser();
+  const { currentUser, hasPermission, canAccess } = useAuth();
 
   const permissions = useMemo(() => {
     if (!currentUser) {
@@ -49,7 +49,7 @@ export const usePermissions = () => {
  * Hook pour vérifier des permissions spécifiques
  */
 export const usePermissionCheck = () => {
-  const { hasPermission } = useUser();
+  const { hasPermission } = useAuth();
 
   return {
     canPublish: () => hasPermission('canPublish'),
@@ -67,7 +67,7 @@ export const usePermissionCheck = () => {
  * Hook pour les permissions de contenu
  */
 export const useContentPermissions = () => {
-  const { hasPermission, currentUser } = useUser();
+  const { hasPermission, currentUser } = useAuth();
 
   return {
     canCreatePost: hasPermission('canPublish'),
@@ -88,7 +88,7 @@ export const useContentPermissions = () => {
  * Hook pour les permissions d'administration
  */
 export const useAdminPermissions = () => {
-  const { hasPermission, currentUser } = useUser();
+  const { hasPermission, currentUser } = useAuth();
 
   return {
     canManageTeam: hasPermission('canManageUsers'),
@@ -105,7 +105,7 @@ export const useAdminPermissions = () => {
  * Hook pour les permissions de navigation
  */
 export const useNavigationPermissions = () => {
-  const { hasPermission, currentUser } = useUser();
+  const { hasPermission, currentUser } = useAuth();
 
   const navigationItems = useMemo(() => {
     const items = [
@@ -188,7 +188,7 @@ export const useNavigationPermissions = () => {
  * Hook pour les permissions de rôles
  */
 export const useRolePermissions = () => {
-  const { currentUser } = useUser();
+  const { currentUser } = useAuth();
 
   const canChangeRole = (targetRole: UserRole, targetUserId: string) => {
     if (!currentUser) return false;
@@ -247,7 +247,7 @@ export const useRolePermissions = () => {
  * Hook pour les permissions de ressources
  */
 export const useResourcePermissions = () => {
-  const { canAccess, currentUser } = useUser();
+  const { canAccess, currentUser } = useAuth();
 
   const canAccessResource = (resource: string, action?: string) => {
     return canAccess(resource, action);
@@ -290,7 +290,7 @@ export const useResourcePermissions = () => {
  * Hook pour les permissions de contenu spécifiques
  */
 export const usePostPermissions = (post?: { authorId?: string; status?: string }) => {
-  const { hasPermission, currentUser } = useUser();
+  const { hasPermission, currentUser } = useAuth();
 
   const canEditPost = () => {
     if (!currentUser || !post) return false;

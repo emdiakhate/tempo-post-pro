@@ -1,14 +1,14 @@
-# Hooks Personnalisés - Documentation
+# 🎣 Documentation des Hooks Personnalisés
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
-Les hooks personnalisés centralisent la logique métier et l'état de l'application Postelma. Ils fournissent une interface cohérente pour interagir avec les services et gérer l'état local.
+Les hooks personnalisés de Postelma fournissent une interface React optimisée pour la gestion d'état, avec des types TypeScript stricts et une architecture modulaire.
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/hooks/
-├── usePosts.ts           # Gestion des posts
+├── usePosts.ts           # Gestion des publications
 ├── useUsers.ts           # Gestion des utilisateurs
 ├── useSocialAccounts.ts  # Gestion des comptes sociaux
 ├── useAnalytics.ts       # Gestion des analytics
@@ -17,15 +17,15 @@ src/hooks/
 ├── useNotifications.ts   # Gestion des notifications
 ├── useTheme.ts           # Gestion du thème
 ├── useSettings.ts        # Gestion des paramètres
-├── index.ts              # Export et configuration
-└── README.md             # Cette documentation
+├── useImageLoader.ts     # Chargement d'images
+├── useAuth.ts            # Authentification
+└── index.ts              # Point d'entrée
 ```
 
-## Hooks Disponibles
+## 🔧 Hooks Disponibles
 
-### 1. usePosts
-
-Gestion complète des posts avec filtrage et actions.
+### **usePosts**
+Gestion complète des publications sociales.
 
 ```typescript
 import { usePosts } from '@/hooks';
@@ -35,35 +35,32 @@ const MyComponent = () => {
     posts,
     loading,
     error,
-    stats,
-    loadPosts,
-    savePost,
+    createPost,
+    updatePost,
     deletePost,
-    duplicatePost,
-    publishPost,
+    getPostsByStatus,
+    getPostsByPlatform,
     approvePost,
     rejectPost,
-    setFilters,
-    clearFilters,
-    filteredPosts
-  } = usePosts({
-    autoLoad: true,
-    initialFilters: { status: ['published'] }
-  });
+    publishPost,
+    schedulePost
+  } = usePosts();
 
-  // Utilisation
-  const handleSavePost = async (post) => {
-    const success = await savePost(post);
-    if (success) {
-      console.log('Post sauvegardé');
+  // Créer une publication
+  const handleCreatePost = async (postData) => {
+    try {
+      const newPost = await createPost(postData);
+      console.log('Post créé:', newPost);
+    } catch (error) {
+      console.error('Erreur:', error);
     }
   };
 
   return (
     <div>
       {loading && <div>Chargement...</div>}
-      {error && <div>Erreur: {error}</div>}
-      {filteredPosts.map(post => (
+      {error && <div>Erreur: {error.message}</div>}
+      {posts.map(post => (
         <div key={post.id}>{post.content}</div>
       ))}
     </div>
@@ -71,46 +68,52 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- CRUD complet des posts
-- Filtrage avancé (statut, plateforme, date, recherche)
-- Actions (publier, approuver, rejeter, dupliquer)
-- Statistiques automatiques
-- Gestion d'erreurs
+**Propriétés disponibles :**
+- `posts: Post[]` - Liste des publications
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `createPost(post: Omit<Post, 'id'>): Promise<Post>` - Créer une publication
+- `updatePost(id: string, updates: Partial<Post>): Promise<Post | null>` - Modifier une publication
+- `deletePost(id: string): Promise<boolean>` - Supprimer une publication
+- `getPostsByStatus(status: PostStatus): Post[]` - Filtrer par statut
+- `getPostsByPlatform(platform: SocialPlatform): Post[]` - Filtrer par plateforme
+- `approvePost(id: string): Promise<Post | null>` - Approuver une publication
+- `rejectPost(id: string, reason: string): Promise<Post | null>` - Rejeter une publication
+- `publishPost(id: string): Promise<Post | null>` - Publier immédiatement
+- `schedulePost(id: string, scheduledTime: Date): Promise<Post | null>` - Programmer une publication
 
-### 2. useUsers
-
+### **useUsers**
 Gestion des utilisateurs et de l'équipe.
 
 ```typescript
 import { useUsers } from '@/hooks';
 
-const MyComponent = () => {
+const TeamComponent = () => {
   const {
     users,
-    teamMembers,
-    invitations,
     loading,
     error,
-    stats,
-    loadUsers,
-    saveUser,
+    createUser,
+    updateUser,
     deleteUser,
-    updateUserRole,
-    toggleUserStatus,
-    addTeamMember,
-    createInvitation
+    inviteUser,
+    acceptInvitation,
+    removeInvitation,
+    getUserStats
   } = useUsers();
 
-  const handleCreateUser = async (userData) => {
-    const success = await saveUser(userData);
-    if (success) {
-      console.log('Utilisateur créé');
+  const handleInviteUser = async (email: string, role: UserRole) => {
+    try {
+      await inviteUser({ email, role });
+      console.log('Invitation envoyée');
+    } catch (error) {
+      console.error('Erreur:', error);
     }
   };
 
   return (
     <div>
+      <h2>Équipe ({users.length} membres)</h2>
       {users.map(user => (
         <div key={user.id}>
           {user.name} - {user.role}
@@ -121,46 +124,58 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Gestion des utilisateurs et rôles
-- Système d'invitations
-- Gestion de l'équipe
-- Filtrage et recherche
-- Statistiques des utilisateurs
+**Propriétés disponibles :**
+- `users: User[]` - Liste des utilisateurs
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `createUser(user: Omit<User, 'id'>): Promise<User>` - Créer un utilisateur
+- `updateUser(id: string, updates: Partial<User>): Promise<User | null>` - Modifier un utilisateur
+- `deleteUser(id: string): Promise<boolean>` - Supprimer un utilisateur
+- `inviteUser(invitation: Omit<Invitation, 'id'>): Promise<Invitation>` - Inviter un utilisateur
+- `acceptInvitation(invitationId: string, userData: Partial<User>): Promise<User>` - Accepter une invitation
+- `removeInvitation(invitationId: string): Promise<boolean>` - Supprimer une invitation
+- `getUserStats(): Promise<UserStats>` - Obtenir les statistiques
 
-### 3. useSocialAccounts
-
+### **useSocialAccounts**
 Gestion des comptes sociaux connectés.
 
 ```typescript
 import { useSocialAccounts } from '@/hooks';
 
-const MyComponent = () => {
+const AccountsComponent = () => {
   const {
     accounts,
     loading,
     error,
-    stats,
-    loadAccounts,
-    connectAccount,
-    disconnectAccount,
-    syncAccount,
-    syncAllAccounts,
-    renameAccount
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    refreshAccountData,
+    getAccountsByPlatform,
+    getAccountStats
   } = useSocialAccounts();
 
-  const handleConnect = async (accountData) => {
-    const newAccount = await connectAccount(accountData);
-    if (newAccount) {
-      console.log('Compte connecté');
+  const handleConnectAccount = async (platform: SocialPlatform) => {
+    try {
+      // Simulation de connexion OAuth
+      const account = await addAccount({
+        platform,
+        username: 'myaccount',
+        accessToken: 'token123',
+        status: 'connected'
+      });
+      console.log('Compte connecté:', account);
+    } catch (error) {
+      console.error('Erreur:', error);
     }
   };
 
   return (
     <div>
+      <h2>Comptes Connectés ({accounts.length})</h2>
       {accounts.map(account => (
         <div key={account.id}>
-          {account.username} - {account.platform}
+          {account.platform}: {account.username}
         </div>
       ))}
     </div>
@@ -168,44 +183,61 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Connexion/déconnexion des comptes
-- Synchronisation des données
-- Gestion des statuts
-- Filtrage par plateforme
-- Statistiques par plateforme
+**Propriétés disponibles :**
+- `accounts: SocialAccount[]` - Liste des comptes
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `addAccount(account: Omit<SocialAccount, 'id'>): Promise<SocialAccount>` - Ajouter un compte
+- `updateAccount(id: string, updates: Partial<SocialAccount>): Promise<SocialAccount | null>` - Modifier un compte
+- `deleteAccount(id: string): Promise<boolean>` - Supprimer un compte
+- `refreshAccountData(id: string): Promise<SocialAccount | null>` - Rafraîchir les données
+- `getAccountsByPlatform(platform: SocialPlatform): SocialAccount[]` - Filtrer par plateforme
+- `getAccountStats(): Promise<SocialAccountStats>` - Obtenir les statistiques
 
-### 4. useAnalytics
-
-Gestion des analytics et métriques.
+### **useAnalytics**
+Gestion des données d'analytics et de performance.
 
 ```typescript
 import { useAnalytics } from '@/hooks';
 
-const MyComponent = () => {
+const AnalyticsComponent = () => {
   const {
     analytics,
-    summary,
     loading,
     error,
-    loadAnalytics,
-    savePostAnalytics,
-    calculateAggregatedMetrics,
-    getAnalyticsForPeriod,
-    exportAnalytics
+    recordPostAnalytics,
+    getPostAnalytics,
+    getAccountAnalytics,
+    getOverallSummary,
+    getEngagementOverTime,
+    getPerformanceByPlatform,
+    getTopPosts,
+    getContentAnalysis,
+    getBestTimesToPost
   } = useAnalytics();
 
-  const handleExport = async () => {
-    const data = await exportAnalytics();
-    // Télécharger le fichier
+  const handleRecordAnalytics = async (postId: string) => {
+    try {
+      await recordPostAnalytics(postId, {
+        likes: 150,
+        comments: 25,
+        shares: 10,
+        views: 1000,
+        engagementRate: 0.15
+      });
+      console.log('Analytics enregistrées');
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
   };
 
   return (
     <div>
-      {summary && (
+      <h2>Analytics</h2>
+      {analytics && (
         <div>
-          Engagement total: {summary.totalEngagement}
-          Impressions: {summary.totalImpressions}
+          <p>Total Engagement: {analytics.totalEngagement}</p>
+          <p>Average Rate: {analytics.averageEngagementRate}%</p>
         </div>
       )}
     </div>
@@ -213,50 +245,56 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Stockage des métriques
-- Calcul de métriques agrégées
-- Filtrage par période et plateforme
-- Export/Import des données
-- Génération de données mock
+**Propriétés disponibles :**
+- `analytics: AnalyticsSummary | null` - Résumé des analytics
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `recordPostAnalytics(postId: string, analytics: PostAnalytics): Promise<void>` - Enregistrer les analytics
+- `getPostAnalytics(postId: string): Promise<PostAnalytics | null>` - Obtenir les analytics d'un post
+- `getAccountAnalytics(accountId: string, period: AnalyticsPeriod): Promise<AccountAnalytics>` - Analytics d'un compte
+- `getOverallSummary(period?: AnalyticsPeriod): Promise<AnalyticsSummary>` - Résumé global
+- `getEngagementOverTime(period: AnalyticsPeriod): Promise<EngagementData[]>` - Évolution de l'engagement
+- `getPerformanceByPlatform(period: AnalyticsPeriod): Promise<PlatformPerformance[]>` - Performance par plateforme
+- `getTopPosts(limit: number, period: AnalyticsPeriod): Promise<PostAnalytics[]>` - Meilleurs posts
+- `getContentAnalysis(period: AnalyticsPeriod): Promise<ContentAnalysis>` - Analyse du contenu
+- `getBestTimesToPost(platform: SocialPlatform): Promise<BestTimeSlot[]>` - Meilleurs moments pour publier
 
-### 5. useMedia
-
-Gestion des médias (images/vidéos).
+### **useMedia**
+Gestion de la bibliothèque de médias.
 
 ```typescript
 import { useMedia } from '@/hooks';
 
-const MyComponent = () => {
+const MediaComponent = () => {
   const {
     media,
     loading,
     error,
-    stats,
-    loadMedia,
-    uploadFile,
-    uploadFiles,
+    uploadMedia,
     deleteMedia,
-    updateMedia,
-    searchMedia
+    getMediaByType,
+    getMediaStats
   } = useMedia();
 
-  const handleUpload = async (file) => {
-    const mediaItem = await uploadFile(file, {
-      tags: ['marketing'],
-      description: 'Image de marketing'
-    });
-    if (mediaItem) {
-      console.log('Média uploadé');
+  const handleUpload = async (file: File) => {
+    try {
+      const mediaItem = await uploadMedia({
+        file,
+        type: 'image',
+        source: 'upload'
+      });
+      console.log('Média uploadé:', mediaItem);
+    } catch (error) {
+      console.error('Erreur:', error);
     }
   };
 
   return (
     <div>
+      <h2>Bibliothèque Médias ({media.length} éléments)</h2>
       {media.map(item => (
         <div key={item.id}>
-          <img src={item.url} alt={item.name} />
-          {item.name}
+          {item.title} - {item.type}
         </div>
       ))}
     </div>
@@ -264,43 +302,38 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Upload de fichiers
-- Gestion des métadonnées
-- Filtrage par type et source
-- Recherche dans les médias
-- Statistiques d'utilisation
+**Propriétés disponibles :**
+- `media: MediaItem[]` - Liste des médias
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `uploadMedia(data: UploadMediaData): Promise<MediaItem>` - Uploader un média
+- `deleteMedia(id: string): Promise<boolean>` - Supprimer un média
+- `getMediaByType(type: MediaType): MediaItem[]` - Filtrer par type
+- `getMediaStats(): Promise<MediaStats>` - Obtenir les statistiques
 
-### 6. useGlobalStats
-
+### **useGlobalStats**
 Statistiques globales de l'application.
 
 ```typescript
 import { useGlobalStats } from '@/hooks';
 
-const MyComponent = () => {
+const DashboardComponent = () => {
   const {
     stats,
     loading,
     error,
-    loadStats,
-    refreshStats,
-    getStatsForPeriod,
-    exportStats
-  } = useGlobalStats({
-    autoLoad: true,
-    refreshInterval: 300000 // 5 minutes
-  });
+    refreshStats
+  } = useGlobalStats();
 
   return (
     <div>
+      <h2>Tableau de Bord</h2>
       {stats && (
         <div>
-          <h3>Statistiques Globales</h3>
-          <p>Posts: {stats.posts.total}</p>
-          <p>Utilisateurs: {stats.users.total}</p>
-          <p>Comptes: {stats.socialAccounts.total}</p>
-          <p>Engagement: {stats.analytics.totalEngagement}</p>
+          <p>Total Posts: {stats.totalPosts}</p>
+          <p>Total Users: {stats.totalUsers}</p>
+          <p>Total Engagement: {stats.totalEngagement}</p>
+          <p>Growth Rate: {stats.growthRate}%</p>
         </div>
       )}
     </div>
@@ -308,50 +341,43 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Statistiques agrégées
-- Actualisation automatique
-- Statistiques par période
-- Export des données
+**Propriétés disponibles :**
+- `stats: GlobalStats | null` - Statistiques globales
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `refreshStats(): Promise<void>` - Rafraîchir les statistiques
 
-### 7. useNotifications
-
-Gestion des notifications système.
+### **useNotifications**
+Gestion des notifications utilisateur.
 
 ```typescript
 import { useNotifications } from '@/hooks';
 
-const MyComponent = () => {
+const NotificationComponent = () => {
   const {
     notifications,
     loading,
     error,
-    stats,
     addNotification,
     markAsRead,
-    markAllAsRead,
-    clearAll
-  } = useNotifications({
-    autoLoad: true,
-    maxNotifications: 100,
-    autoMarkAsRead: false
-  });
+    clearAll,
+    getUnreadCount
+  } = useNotifications();
 
-  const handleAddNotification = () => {
+  const handleAddNotification = (message: string, type: NotificationType) => {
     addNotification({
-      type: 'success',
-      title: 'Succès',
-      message: 'Opération réussie',
-      persistent: false
+      message,
+      type,
+      duration: 5000
     });
   };
 
   return (
     <div>
+      <h2>Notifications ({getUnreadCount()} non lues)</h2>
       {notifications.map(notification => (
-        <div key={notification.id} className={notification.read ? 'read' : 'unread'}>
-          <h4>{notification.title}</h4>
-          <p>{notification.message}</p>
+        <div key={notification.id}>
+          {notification.message}
         </div>
       ))}
     </div>
@@ -359,177 +385,295 @@ const MyComponent = () => {
 };
 ```
 
-**Fonctionnalités :**
-- Création de notifications
-- Gestion des types (info, success, warning, error)
-- Marquage comme lu
-- Filtrage et recherche
-- Export/Import
+**Propriétés disponibles :**
+- `notifications: Notification[]` - Liste des notifications
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `addNotification(notification: Omit<Notification, 'id'>): Promise<Notification>` - Ajouter une notification
+- `markAsRead(id: string): Promise<void>` - Marquer comme lu
+- `clearAll(): Promise<void>` - Effacer toutes les notifications
+- `getUnreadCount(): number` - Nombre de notifications non lues
 
-### 8. useTheme
-
-Gestion du thème et des préférences d'affichage.
+### **useTheme**
+Gestion du thème de l'application.
 
 ```typescript
 import { useTheme } from '@/hooks';
 
-const MyComponent = () => {
+const ThemeComponent = () => {
   const {
     theme,
-    loading,
-    error,
-    setMode,
-    setColorScheme,
-    setFontSize,
-    toggleReducedMotion,
-    toggleHighContrast,
-    toggleCompactMode,
+    setTheme,
+    toggleTheme,
     isDark,
     isLight,
-    getThemeClasses
+    colors
   } = useTheme();
 
-  const handleThemeChange = async (mode) => {
-    await setMode(mode);
-  };
-
   return (
-    <div className={getThemeClasses()}>
-      <button onClick={() => handleThemeChange('dark')}>
-        Mode sombre
-      </button>
-      <button onClick={() => handleThemeChange('light')}>
-        Mode clair
-      </button>
+    <div>
+      <h2>Thème Actuel: {theme}</h2>
+      <button onClick={() => setTheme('dark')}>Mode Sombre</button>
+      <button onClick={() => setTheme('light')}>Mode Clair</button>
+      <button onClick={toggleTheme}>Basculer</button>
     </div>
   );
 };
 ```
 
-**Fonctionnalités :**
-- Mode sombre/clair/système
-- Schémas de couleurs
-- Taille de police
-- Options d'accessibilité
-- Export/Import du thème
+**Propriétés disponibles :**
+- `theme: ThemeMode` - Thème actuel
+- `setTheme(theme: ThemeMode): void` - Changer le thème
+- `toggleTheme(): void` - Basculer le thème
+- `isDark: boolean` - Mode sombre actif
+- `isLight: boolean` - Mode clair actif
+- `colors: ColorScheme` - Couleurs du thème
 
-### 9. useSettings
-
+### **useSettings**
 Gestion des paramètres de l'application.
 
 ```typescript
 import { useSettings } from '@/hooks';
 
-const MyComponent = () => {
+const SettingsComponent = () => {
   const {
     settings,
     loading,
     error,
     updateSettings,
-    updateLanguage,
-    updateTimezone,
-    toggleNotifications,
-    updateApiKeys,
-    validateSettings
+    resetSettings
   } = useSettings();
 
-  const handleLanguageChange = async (language) => {
-    await updateLanguage(language);
+  const handleUpdateSettings = async (newSettings: Partial<AppSettings>) => {
+    try {
+      await updateSettings(newSettings);
+      console.log('Paramètres mis à jour');
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
   };
 
   return (
     <div>
-      <select 
-        value={settings.language} 
-        onChange={(e) => handleLanguageChange(e.target.value)}
-      >
-        <option value="fr">Français</option>
-        <option value="en">English</option>
-      </select>
+      <h2>Paramètres</h2>
+      {settings && (
+        <div>
+          <p>Langue: {settings.language}</p>
+          <p>Fuseau horaire: {settings.timezone}</p>
+          <p>Notifications: {settings.notifications ? 'Activées' : 'Désactivées'}</p>
+        </div>
+      )}
     </div>
   );
 };
 ```
 
-**Fonctionnalités :**
-- Paramètres généraux
-- Notifications
-- Posts
-- Analytics
-- Sécurité
-- Performance
-- Intégrations
-- Validation des paramètres
+**Propriétés disponibles :**
+- `settings: AppSettings | null` - Paramètres actuels
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
+- `updateSettings(settings: Partial<AppSettings>): Promise<void>` - Mettre à jour les paramètres
+- `resetSettings(): Promise<void>` - Réinitialiser les paramètres
 
-## Utilisation avec le Container
+### **useImageLoader**
+Chargement optimisé d'images.
 
 ```typescript
-import { useHooks } from '@/hooks';
+import { useImageLoader } from '@/hooks';
 
-const MyComponent = () => {
-  const hooks = useHooks();
-  
-  // Utiliser les hooks
-  const posts = hooks.usePosts();
-  const users = hooks.useUsers();
-  const theme = hooks.useTheme();
-  
-  return <div>...</div>;
+const ImageComponent = () => {
+  const { imageUrl, loading, error } = useImageLoader('https://example.com/image.jpg');
+
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div>Erreur: {error.message}</div>;
+
+  return <img src={imageUrl} alt="Image" />;
 };
 ```
 
-## Gestion d'Erreurs
+**Propriétés disponibles :**
+- `imageUrl: string | null` - URL de l'image
+- `loading: boolean` - État de chargement
+- `error: Error | null` - Erreur éventuelle
 
-Tous les hooks utilisent un système de gestion d'erreurs cohérent :
+### **useAuth**
+Authentification et gestion des utilisateurs.
 
 ```typescript
-const { loading, error, data } = usePosts();
+import { useAuth } from '@/hooks';
 
-if (loading) return <div>Chargement...</div>;
-if (error) return <div>Erreur: {error}</div>;
-return <div>{data.map(item => ...)}</div>;
+const AuthComponent = () => {
+  const {
+    currentUser,
+    isAuthenticated,
+    login,
+    logout,
+    hasPermission,
+    canAccess
+  } = useAuth();
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      await login(email, password);
+      console.log('Connexion réussie');
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
+
+  return (
+    <div>
+      {isAuthenticated ? (
+        <div>
+          <p>Bonjour {currentUser?.name}!</p>
+          <button onClick={logout}>Déconnexion</button>
+        </div>
+      ) : (
+        <button onClick={() => handleLogin('user@example.com', 'password')}>
+          Connexion
+        </button>
+      )}
+    </div>
+  );
+};
 ```
 
-## Performance
+**Propriétés disponibles :**
+- `currentUser: User | null` - Utilisateur actuel
+- `isAuthenticated: boolean` - État d'authentification
+- `login(email: string, password: string): Promise<void>` - Connexion
+- `logout(): Promise<void>` - Déconnexion
+- `hasPermission(permission: string): boolean` - Vérifier une permission
+- `canAccess(resource: string, action?: string): boolean` - Vérifier l'accès à une ressource
 
-- **Lazy Loading** : Les données sont chargées à la demande
-- **Mise en cache** : Les statistiques sont mises en cache
-- **Optimisation** : Filtrage côté hook pour réduire les re-renders
-- **Memoization** : Utilisation de `useMemo` et `useCallback`
+## 🔄 Gestion d'État
 
-## Tests
+### **État Local**
+Chaque hook gère son propre état local avec React.
 
-Chaque hook peut être testé indépendamment :
+```typescript
+const [data, setData] = useState<T[]>([]);
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState<Error | null>(null);
+```
 
+### **Synchronisation**
+Les hooks se synchronisent automatiquement avec le stockage local.
+
+```typescript
+useEffect(() => {
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const result = await service.getAll();
+      setData(result);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadData();
+}, []);
+```
+
+### **Cache et Performance**
+- Mise en cache des données fréquemment utilisées
+- Debouncing des requêtes
+- Optimisation des re-rendus
+- Lazy loading des données volumineuses
+
+## 🧪 Tests
+
+### **Tests Unitaires**
 ```typescript
 import { renderHook, act } from '@testing-library/react';
 import { usePosts } from '@/hooks';
 
 describe('usePosts', () => {
-  it('should load posts', async () => {
+  it('should create a post', async () => {
     const { result } = renderHook(() => usePosts());
-    
+
     await act(async () => {
-      await result.current.loadPosts();
+      const post = await result.current.createPost({
+        content: 'Test post',
+        platforms: ['instagram'],
+        scheduledTime: new Date()
+      });
+
+      expect(post.id).toBeDefined();
+      expect(post.content).toBe('Test post');
     });
-    
-    expect(result.current.posts).toBeDefined();
   });
 });
 ```
 
-## Évolutivité
+### **Tests d'Intégration**
+```typescript
+describe('Hook Integration', () => {
+  it('should handle complete workflow', async () => {
+    const { result: postsResult } = renderHook(() => usePosts());
+    const { result: analyticsResult } = renderHook(() => useAnalytics());
 
-Les hooks sont conçus pour être facilement étendus :
+    // Créer un post
+    const post = await postsResult.current.createPost({...});
+    
+    // Enregistrer les analytics
+    await analyticsResult.current.recordPostAnalytics(post.id, {...});
+    
+    // Vérifier les données
+    expect(postsResult.current.posts).toHaveLength(1);
+    expect(analyticsResult.current.analytics).toBeDefined();
+  });
+});
+```
 
-1. **Interface commune** : Tous les hooks suivent la même interface
-2. **Abstraction** : Les services peuvent être remplacés
-3. **Configuration** : Options flexibles pour chaque hook
-4. **Types stricts** : TypeScript pour la sécurité des types
+## 📈 Performance
 
-## Prochaines Étapes
+### **Optimisations**
+- **Memoization** : `useMemo` et `useCallback` pour éviter les re-calculs
+- **Lazy Loading** : Chargement des données à la demande
+- **Debouncing** : Éviter les appels multiples
+- **Caching** : Mise en cache des résultats
 
-1. **Tests unitaires** : Ajouter des tests pour chaque hook
-2. **Optimisations** : Améliorer les performances
-3. **Documentation** : Ajouter des exemples d'utilisation
-4. **Intégration** : Connecter avec les composants existants
+### **Monitoring**
+```typescript
+// Surveiller les performances
+const startTime = performance.now();
+await createPost(postData);
+const endTime = performance.now();
+console.log(`Temps d'exécution: ${endTime - startTime}ms`);
+```
+
+## 🔒 Sécurité
+
+### **Validation des Données**
+- Validation TypeScript stricte
+- Sanitisation des entrées
+- Vérification des permissions
+- Gestion des erreurs
+
+### **Gestion des Erreurs**
+```typescript
+try {
+  const result = await createPost(postData);
+  return result;
+} catch (error) {
+  console.error('Erreur lors de la création du post:', error);
+  throw new Error('Impossible de créer le post');
+}
+```
+
+## 📚 Ressources
+
+- [React Hooks](https://react.dev/reference/react)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- [Performance Best Practices](https://react.dev/learn/render-and-commit)
+
+---
+
+**Dernière mise à jour :** 2025-01-08  
+**Version :** 1.0.0  
+**Auteur :** Postelma Team

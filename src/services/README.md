@@ -1,27 +1,25 @@
-# Services Layer - Documentation
+# 📚 Documentation des Services
 
-## Vue d'ensemble
+## 🎯 Vue d'ensemble
 
-La couche de services abstrait la gestion des données et fournit une API cohérente pour toutes les opérations de stockage et de récupération de données dans l'application Postelma.
+La couche de services de Postelma fournit une abstraction complète pour la gestion des données, avec une architecture modulaire et des types TypeScript stricts.
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/services/
 ├── storage.ts          # Service de base pour localStorage
-├── posts.ts           # Gestion des posts
+├── posts.ts           # Gestion des publications
 ├── users.ts           # Gestion des utilisateurs
 ├── socialAccounts.ts  # Gestion des comptes sociaux
 ├── analytics.ts       # Gestion des analytics
-├── index.ts           # Export et configuration
-└── README.md          # Cette documentation
+└── index.ts           # Point d'entrée et injection de dépendances
 ```
 
-## Services Disponibles
+## 🔧 Services Disponibles
 
-### 1. StorageService
-
-Service de base pour la gestion du stockage localStorage avec gestion d'erreurs.
+### **StorageService**
+Service de base pour toutes les opérations de stockage local.
 
 ```typescript
 import { StorageService } from '@/services';
@@ -30,260 +28,371 @@ import { StorageService } from '@/services';
 const result = await StorageService.save('posts', postsData);
 
 // Charger des données
-const result = await StorageService.load('posts', defaultValue);
+const posts = await StorageService.load<Post[]>('posts');
 
 // Supprimer des données
-const result = await StorageService.remove('posts');
-
-// Vérifier l'existence
-const result = await StorageService.exists('posts');
+await StorageService.remove('posts');
 ```
 
-**Fonctionnalités :**
-- Gestion d'erreurs centralisée
-- Préfixe automatique pour éviter les conflits
-- Vérification de la taille des données
-- Migration de données
-- Calcul de l'espace utilisé
+**Méthodes disponibles :**
+- `save<T>(key: string, data: T): Promise<StorageResult<boolean>>`
+- `load<T>(key: string): Promise<StorageResult<T | null>>`
+- `remove(key: string): Promise<StorageResult<boolean>>`
+- `getAllKeys(): Promise<StorageResult<string[]>>`
+- `clear(): Promise<StorageResult<boolean>>`
+- `getUsedSpace(): Promise<StorageResult<number>>`
+- `migrate<T>(oldKey: string, newKey: string, transformer?: (data: any) => T): Promise<StorageResult<T | null>>`
 
-### 2. PostsService
-
-Gestion complète des posts avec filtrage et statistiques.
+### **PostsService**
+Gestion complète des publications sociales.
 
 ```typescript
 import { PostsService } from '@/services';
 
-// Récupérer tous les posts
-const posts = await PostsService.getAllPosts();
-
-// Filtrer les posts
-const filteredPosts = await PostsService.getFilteredPosts({
-  status: ['published', 'scheduled'],
+// Créer une publication
+const newPost = await PostsService.createPost({
+  content: 'Mon nouveau post',
   platforms: ['instagram', 'facebook'],
-  search: 'marketing'
+  scheduledTime: new Date()
 });
 
-// Sauvegarder un post
-const saved = await PostsService.savePost(post);
+// Récupérer les posts par statut
+const publishedPosts = await PostsService.getPostsByStatus('published');
 
-// Publier un post
-const published = await PostsService.publishPost(postId);
-
-// Dupliquer un post
-const duplicated = await PostsService.duplicatePost(postId);
+// Approuver un post
+await PostsService.approvePost(postId, userId);
 ```
 
-**Fonctionnalités :**
-- CRUD complet des posts
-- Filtrage avancé (statut, plateforme, date, recherche)
-- Gestion des statuts (draft, scheduled, published, pending, rejected, failed)
-- Système d'approbation
-- Statistiques automatiques
-- Import/Export JSON
+**Méthodes disponibles :**
+- `getAllPosts(): Promise<Post[]>`
+- `getPostById(id: string): Promise<Post | null>`
+- `createPost(post: Omit<Post, 'id'>): Promise<Post>`
+- `updatePost(id: string, updates: Partial<Post>): Promise<Post | null>`
+- `deletePost(id: string): Promise<boolean>`
+- `getPostsByStatus(status: PostStatus): Promise<Post[]>`
+- `getPostsByPlatform(platform: SocialPlatform): Promise<Post[]>`
+- `approvePost(id: string, approvedBy: string): Promise<Post | null>`
+- `rejectPost(id: string, rejectedBy: string, reason: string): Promise<Post | null>`
+- `publishPost(id: string): Promise<Post | null>`
+- `schedulePost(id: string, scheduledTime: Date): Promise<Post | null>`
 
-### 3. UsersService
-
+### **UsersService**
 Gestion des utilisateurs et de l'équipe.
 
 ```typescript
 import { UsersService } from '@/services';
 
-// Récupérer tous les utilisateurs
-const users = await UsersService.getAllUsers();
-
-// Filtrer les utilisateurs
-const filteredUsers = await UsersService.getFilteredUsers({
-  role: ['manager', 'creator'],
-  isActive: true,
-  search: 'john'
+// Créer un utilisateur
+const user = await UsersService.createUser({
+  name: 'John Doe',
+  email: 'john@example.com',
+  role: 'creator'
 });
 
-// Mettre à jour le rôle
-const updated = await UsersService.updateUserRole(userId, 'manager');
-
-// Gestion des invitations
-const invitation = await UsersService.createInvitation({
-  id: 'inv_123',
-  email: 'user@example.com',
-  role: 'creator',
-  status: 'pending',
-  invitedBy: 'admin',
-  invitedAt: new Date()
+// Inviter un utilisateur
+await UsersService.inviteUser({
+  email: 'new@example.com',
+  role: 'creator'
 });
+
+// Obtenir les statistiques
+const stats = await UsersService.getUserStats();
 ```
 
-**Fonctionnalités :**
-- Gestion des utilisateurs et rôles
-- Système d'invitations
-- Gestion de l'équipe
-- Statistiques des utilisateurs
-- Recherche et filtrage
+**Méthodes disponibles :**
+- `getAllUsers(): Promise<User[]>`
+- `getUserById(id: string): Promise<User | null>`
+- `createUser(user: Omit<User, 'id'>): Promise<User>`
+- `updateUser(id: string, updates: Partial<User>): Promise<User | null>`
+- `deleteUser(id: string): Promise<boolean>`
+- `inviteUser(invitation: Omit<Invitation, 'id'>): Promise<Invitation>`
+- `acceptInvitation(invitationId: string, userData: Partial<User>): Promise<User>`
+- `removeInvitation(invitationId: string): Promise<boolean>`
+- `getUserStats(): Promise<UserStats>`
 
-### 4. SocialAccountsService
-
+### **SocialAccountsService**
 Gestion des comptes sociaux connectés.
 
 ```typescript
 import { SocialAccountsService } from '@/services';
 
-// Récupérer tous les comptes
-const accounts = await SocialAccountsService.getAllAccounts();
-
-// Connecter un compte
-const newAccount = await SocialAccountsService.connectAccount({
+// Ajouter un compte
+const account = await SocialAccountsService.addAccount({
   platform: 'instagram',
   username: 'myaccount',
-  displayName: 'My Account',
-  // ... autres propriétés
+  accessToken: 'token123'
 });
 
-// Synchroniser tous les comptes
-const syncResult = await SocialAccountsService.syncAllAccounts();
+// Rafraîchir les données
+await SocialAccountsService.refreshAccountData(accountId);
 
-// Filtrer par plateforme
+// Obtenir les comptes par plateforme
 const instagramAccounts = await SocialAccountsService.getAccountsByPlatform('instagram');
 ```
 
-**Fonctionnalités :**
-- Gestion des comptes sociaux
-- Synchronisation des données
-- Gestion des statuts de connexion
-- Statistiques par plateforme
-- Renommage des comptes
+**Méthodes disponibles :**
+- `getAllAccounts(): Promise<SocialAccount[]>`
+- `getAccountById(id: string): Promise<SocialAccount | null>`
+- `addAccount(account: Omit<SocialAccount, 'id'>): Promise<SocialAccount>`
+- `updateAccount(id: string, updates: Partial<SocialAccount>): Promise<SocialAccount | null>`
+- `deleteAccount(id: string): Promise<boolean>`
+- `refreshAccountData(id: string): Promise<SocialAccount | null>`
+- `getAccountsByPlatform(platform: SocialPlatform): Promise<SocialAccount[]>`
+- `getAccountStats(): Promise<SocialAccountStats>`
 
-### 5. AnalyticsService
-
-Gestion des analytics et métriques.
+### **AnalyticsService**
+Gestion des données d'analytics et de performance.
 
 ```typescript
 import { AnalyticsService } from '@/services';
 
-// Récupérer les analytics d'un post
-const analytics = await AnalyticsService.getPostAnalytics(postId);
-
-// Récupérer les analytics filtrés
-const filteredAnalytics = await AnalyticsService.getFilteredAnalytics({
-  dateFrom: new Date('2024-01-01'),
-  dateTo: new Date('2024-01-31'),
-  platforms: ['instagram', 'facebook']
+// Enregistrer les analytics d'un post
+await AnalyticsService.recordPostAnalytics(postId, {
+  likes: 150,
+  comments: 25,
+  shares: 10,
+  views: 1000
 });
 
-// Calculer les métriques agrégées
-const metrics = await AnalyticsService.calculateAggregatedMetrics(analytics);
+// Obtenir le résumé global
+const summary = await AnalyticsService.getOverallSummary();
 
-// Obtenir le résumé
-const summary = await AnalyticsService.getAnalyticsSummary();
+// Obtenir les meilleurs moments pour publier
+const bestTimes = await AnalyticsService.getBestTimesToPost('instagram');
 ```
 
-**Fonctionnalités :**
-- Stockage des métriques de performance
-- Calcul de métriques agrégées
-- Filtrage par période et plateforme
-- Résumés automatiques
-- Génération de données mock
-- Import/Export des données
+**Méthodes disponibles :**
+- `recordPostAnalytics(postId: string, analytics: PostAnalytics): Promise<void>`
+- `getPostAnalytics(postId: string): Promise<PostAnalytics | null>`
+- `getAccountAnalytics(accountId: string, period: AnalyticsPeriod): Promise<AccountAnalytics>`
+- `getOverallSummary(period?: AnalyticsPeriod): Promise<AnalyticsSummary>`
+- `getEngagementOverTime(period: AnalyticsPeriod): Promise<EngagementData[]>`
+- `getPerformanceByPlatform(period: AnalyticsPeriod): Promise<PlatformPerformance[]>`
+- `getTopPosts(limit: number, period: AnalyticsPeriod): Promise<PostAnalytics[]>`
+- `getContentAnalysis(period: AnalyticsPeriod): Promise<ContentAnalysis>`
+- `getBestTimesToPost(platform: SocialPlatform): Promise<BestTimeSlot[]>`
 
-## Utilisation avec le Container
+## 🔄 Injection de Dépendances
+
+### **ServiceContainer**
+Le conteneur de services permet l'injection de dépendances et la gestion centralisée.
 
 ```typescript
-import { configureServices, useService } from '@/services';
+import { ServiceContainer, useService } from '@/services';
 
-// Configuration initiale
-const container = configureServices();
+// Configuration des services
+const container = ServiceContainer.getInstance();
+container.register('posts', PostsService);
+container.register('users', UsersService);
 
 // Utilisation dans un composant
-const PostsService = useService('posts');
-const posts = await PostsService.getAllPosts();
+const MyComponent = () => {
+  const postsService = useService<PostsService>('posts');
+  // ...
+};
 ```
 
-## Gestion d'Erreurs
-
-Tous les services utilisent un système de gestion d'erreurs cohérent :
+### **Configuration Automatique**
+Les services sont automatiquement configurés via `configureServices()`.
 
 ```typescript
+import { configureServices } from '@/services';
+
+// Configuration automatique
+const container = configureServices();
+```
+
+## 📊 Types et Interfaces
+
+### **Types Principaux**
+```typescript
+// Résultat d'opération
 interface StorageResult<T> {
   data?: T;
-  error?: StorageError;
   success: boolean;
+  error?: StorageError;
 }
 
-// Exemple d'utilisation
-const result = await PostsService.getAllPosts();
-if (result.success) {
-  // Utiliser result.data
-} else {
-  // Gérer result.error
-  console.error(result.error?.message);
+// Filtres pour les requêtes
+interface PostFilters {
+  status?: PostStatus;
+  platform?: SocialPlatform;
+  author?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+}
+
+// Statistiques
+interface PostStats {
+  total: number;
+  byStatus: Record<PostStatus, number>;
+  byPlatform: Record<SocialPlatform, number>;
+  engagement: {
+    total: number;
+    average: number;
+  };
 }
 ```
 
-## Types d'Erreurs
+### **Gestion d'Erreurs**
+```typescript
+interface StorageError {
+  code: string;
+  message: string;
+  originalError?: Error;
+}
 
-- `STORAGE_QUOTA_EXCEEDED` : Espace de stockage insuffisant
-- `STORAGE_SECURITY_ERROR` : Accès refusé (mode privé)
-- `STORAGE_SYNTAX_ERROR` : Données corrompues
-- `STORAGE_ACCESS_ERROR` : Erreur d'accès général
-- `STORAGE_MIGRATION_ERROR` : Erreur de migration
+// Codes d'erreur courants
+const ERROR_CODES = {
+  STORAGE_SAVE_ERROR: 'STORAGE_SAVE_ERROR',
+  STORAGE_LOAD_ERROR: 'STORAGE_LOAD_ERROR',
+  STORAGE_REMOVE_ERROR: 'STORAGE_REMOVE_ERROR',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  NOT_FOUND_ERROR: 'NOT_FOUND_ERROR'
+} as const;
+```
 
-## Migration de Données
+## 🚀 Utilisation avec les Hooks
+
+### **Hooks Personnalisés**
+Les services sont utilisés via des hooks personnalisés pour une meilleure intégration React.
 
 ```typescript
-// Migrer des données d'une ancienne version
+import { usePosts, useUsers, useAnalytics } from '@/hooks';
+
+const MyComponent = () => {
+  const { posts, createPost, updatePost, deletePost } = usePosts();
+  const { users, createUser } = useUsers();
+  const { analytics, recordAnalytics } = useAnalytics();
+  
+  // ...
+};
+```
+
+### **Gestion d'État**
+Les hooks gèrent automatiquement :
+- L'état de chargement
+- Les erreurs
+- La synchronisation avec le stockage local
+- La mise en cache
+- La validation des données
+
+## 🔧 Configuration
+
+### **Préfixe de Stockage**
+```typescript
+const STORAGE_PREFIX = 'postelma_';
+```
+
+### **Migration de Données**
+```typescript
+// Migration d'une ancienne version
 const result = await StorageService.migrate(
-  'old_posts_key',
-  'new_posts_key',
-  (oldData) => {
-    // Transformer les données si nécessaire
-    return oldData.map(post => ({
-      ...post,
-      newField: 'defaultValue'
-    }));
-  }
+  'old_posts',
+  'posts',
+  (oldData) => ({
+    ...oldData,
+    // Transformation des données
+    createdAt: new Date(oldData.createdAt)
+  })
 );
 ```
 
-## Performance
-
-- **Lazy Loading** : Les données sont chargées à la demande
-- **Mise en cache** : Les statistiques sont mises en cache
-- **Optimisation** : Filtrage côté service pour réduire les transferts
-- **Compression** : Gestion automatique de la taille des données
-
-## Tests
-
-Chaque service peut être testé indépendamment :
-
+### **Gestion de l'Espace**
 ```typescript
-// Mock du StorageService pour les tests
-const mockStorage = {
-  save: jest.fn(),
-  load: jest.fn(),
-  remove: jest.fn()
-};
+// Vérifier l'espace utilisé
+const spaceUsed = await StorageService.getUsedSpace();
+console.log(`Espace utilisé: ${spaceUsed} bytes`);
 
-// Test d'un service
+// Nettoyer le cache
+await StorageService.clear();
+```
+
+## 🧪 Tests
+
+### **Tests Unitaires**
+```typescript
 describe('PostsService', () => {
-  it('should save a post', async () => {
-    const post = { id: '1', content: 'Test' };
-    const result = await PostsService.savePost(post);
-    expect(result).toBe(true);
+  beforeEach(() => {
+    // Nettoyer le localStorage
+    localStorage.clear();
+  });
+
+  it('should create a post', async () => {
+    const post = await PostsService.createPost({
+      content: 'Test post',
+      platforms: ['instagram'],
+      scheduledTime: new Date()
+    });
+
+    expect(post.id).toBeDefined();
+    expect(post.content).toBe('Test post');
   });
 });
 ```
 
-## Évolutivité
+### **Tests d'Intégration**
+```typescript
+describe('Service Integration', () => {
+  it('should handle complete workflow', async () => {
+    // Créer un utilisateur
+    const user = await UsersService.createUser({...});
+    
+    // Créer un post
+    const post = await PostsService.createPost({...});
+    
+    // Enregistrer les analytics
+    await AnalyticsService.recordPostAnalytics(post.id, {...});
+    
+    // Vérifier les données
+    const stats = await AnalyticsService.getOverallSummary();
+    expect(stats.totalPosts).toBe(1);
+  });
+});
+```
 
-La couche de services est conçue pour être facilement remplaçable par une API backend :
+## 📈 Performance
 
-1. **Interface commune** : Tous les services suivent la même interface
-2. **Abstraction** : Le StorageService peut être remplacé par un APIService
-3. **Configuration** : Utilisation du container pour l'injection de dépendances
-4. **Types stricts** : TypeScript pour la sécurité des types
+### **Optimisations**
+- **Lazy Loading** : Chargement des données à la demande
+- **Caching** : Mise en cache des requêtes fréquentes
+- **Debouncing** : Éviter les appels multiples
+- **Compression** : Compression des données volumineuses
 
-## Prochaines Étapes
+### **Monitoring**
+```typescript
+// Surveiller les performances
+const startTime = performance.now();
+await PostsService.getAllPosts();
+const endTime = performance.now();
+console.log(`Temps d'exécution: ${endTime - startTime}ms`);
+```
 
-1. **API Backend** : Remplacer localStorage par des appels API
-2. **Cache** : Implémenter un système de cache plus sophistiqué
-3. **Synchronisation** : Ajouter la synchronisation en temps réel
-4. **Offline** : Gestion du mode hors ligne
-5. **Performance** : Optimisations avancées
+## 🔒 Sécurité
+
+### **Validation des Données**
+- Validation TypeScript stricte
+- Sanitisation des entrées
+- Vérification des permissions
+- Chiffrement des données sensibles
+
+### **Gestion des Erreurs**
+- Logging des erreurs
+- Récupération gracieuse
+- Notifications utilisateur
+- Rollback automatique
+
+## 📚 Ressources
+
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [React Hooks](https://react.dev/reference/react)
+- [LocalStorage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
+- [Error Handling Best Practices](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling)
+
+---
+
+**Dernière mise à jour :** 2025-01-08  
+**Version :** 1.0.0  
+**Auteur :** Postelma Team

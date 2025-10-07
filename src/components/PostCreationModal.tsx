@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { FacebookPreview, TwitterPreview, InstagramPreview, LinkedInPreview, TikTokPreview, YouTubePreview } from './PreviewModal';
+import { FacebookPreview, TwitterPreview, InstagramPreview, LinkedInPreview, TikTokPreview, YouTubePreview } from './previews';
 import { useBestTime, useEngagementChart } from '@/hooks/useBestTime';
 import { useHashtagSuggestions, useHashtagSets } from '@/hooks/useHashtagStats';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -1276,6 +1276,6 @@ const PostCreationModal: React.FC<PostCreationModalProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default PostCreationModal;

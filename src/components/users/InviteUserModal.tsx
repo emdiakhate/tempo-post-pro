@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { UserRole } from '@/types/user';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRolePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { inviteUser, isLoading, error } = useUser();
+  const { inviteUser, isLoading, error } = useAuth();
   const { availableRoles } = useRolePermissions();
   
   const [formData, setFormData] = useState({
