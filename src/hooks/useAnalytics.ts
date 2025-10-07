@@ -1,230 +1,308 @@
 /**
- * Hook pour la gestion des analytics
- * Phase 3: Analytics Interface
+ * Hook personnalisé pour la gestion des analytics
+ * Centralise la logique métier des analytics avec les services
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { AnalyticsSummary, AnalyticsFilters, SocialPlatform } from '@/types/analytics';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { AnalyticsService, AnalyticsFilters, AnalyticsPeriod } from '@/services';
+import { PostAnalytics, AnalyticsSummary } from '@/types/analytics';
 
-// Fonction pour générer des données mock cohérentes
-const generateMockAnalytics = (
-  period: { start: Date; end: Date },
-  platforms: SocialPlatform[]
-): AnalyticsSummary => {
-  const days = Math.ceil((period.end.getTime() - period.start.getTime()) / (1000 * 60 * 60 * 24));
+export interface UseAnalyticsOptions {
+  autoLoad?: boolean;
+  initialFilters?: AnalyticsFilters;
+}
+
+export interface UseAnalyticsReturn {
+  // État
+  analytics: PostAnalytics[];
+  summary: AnalyticsSummary | null;
+  loading: boolean;
+  error: string | null;
   
-  // Générer des données quotidiennes
-  const dailyEngagement = Array.from({ length: days }, (_, i) => {
-    const date = new Date(period.start);
-    date.setDate(date.getDate() + i);
-    
-    return {
-      date: date.toISOString().split('T')[0],
-      engagement: Math.floor(Math.random() * 500) + 100,
-      impressions: Math.floor(Math.random() * 5000) + 1000,
-      posts: Math.floor(Math.random() * 3) + 1
-    };
-  });
+  // Actions
+  loadAnalytics: () => Promise<void>;
+  savePostAnalytics: (analytics: PostAnalytics) => Promise<boolean>;
+  getPostAnalytics: (postId: string) => Promise<PostAnalytics | null>;
+  generateMockData: () => Promise<void>;
+  exportAnalytics: () => Promise<string>;
+  importAnalytics: (jsonData: string) => Promise<boolean>;
+  
+  // Filtrage
+  setFilters: (filters: AnalyticsFilters) => void;
+  clearFilters: () => void;
+  filteredAnalytics: PostAnalytics[];
+  
+  // Métriques
+  calculateAggregatedMetrics: (analytics: PostAnalytics[]) => Promise<{
+    totalEngagement: number;
+    totalImpressions: number;
+    totalReach: number;
+    averageEngagementRate: number;
+    totalPosts: number;
+    topPerformingPost: PostAnalytics | null;
+  }>;
+  
+  // Utilitaires
+  getAnalyticsForPeriod: (period: AnalyticsPeriod) => Promise<PostAnalytics[]>;
+  getAnalyticsByPlatform: (platform: string) => Promise<PostAnalytics[]>;
+  getAnalyticsByAccount: (accountId: string) => Promise<PostAnalytics[]>;
+  getPredefinedPeriods: () => AnalyticsPeriod[];
+  refreshSummary: () => Promise<void>;
+}
 
-  // Calculer les totaux
-  const totalLikes = dailyEngagement.reduce((sum, day) => sum + day.engagement, 0);
-  const totalImpressions = dailyEngagement.reduce((sum, day) => sum + day.impressions, 0);
-  const totalComments = Math.floor(totalLikes * 0.1);
-  const totalShares = Math.floor(totalLikes * 0.05);
-  const totalReach = Math.floor(totalImpressions * 0.8);
-  const avgEngagementRate = (totalLikes + totalComments + totalShares) / totalImpressions * 100;
+export const useAnalytics = (options: UseAnalyticsOptions = {}): UseAnalyticsReturn => {
+  const { autoLoad = true, initialFilters = {} } = options;
+  
+  // État principal
+  const [analytics, setAnalytics] = useState<PostAnalytics[]>([]);
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<AnalyticsFilters>(initialFilters);
 
-  // Performance par plateforme
-  const platformPerformance = platforms.map(platform => ({
-    platform,
-    impressions: Math.floor(Math.random() * 10000) + 5000,
-    engagementRate: Math.random() * 5 + 1
-  }));
-
-  // Top posts - Données de boucherie avec vrais textes
-  const boucheriePosts = [
-    {
-      postId: 'post-1',
-      platform: 'instagram' as SocialPlatform,
-      publishedAt: new Date(period.start.getTime() + Math.random() * (period.end.getTime() - period.start.getTime())),
-      image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=400&fit=crop',
-      caption: '🥩 Découvrez notre sélection premium de viandes fraîches chez Mata Viande ! Nos steaks de bœuf sont parfaits pour vos grillades du weekend. Livraison gratuite dès 50€ ! #MataViande #QualitéPremium #BoucherieEnLigne',
-      metrics: {
-        likes: 1247,
-        comments: 89,
-        shares: 45,
-        impressions: 8500,
-        reach: 6800,
-        engagement: 1381,
-        engagementRate: 16.2,
-        saves: 67,
-        clicks: 234
-      },
-      lastUpdated: new Date()
-    },
-    {
-      postId: 'post-2',
-      platform: 'facebook' as SocialPlatform,
-      publishedAt: new Date(period.start.getTime() + Math.random() * (period.end.getTime() - period.start.getTime())),
-      image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&h=400&fit=crop',
-      caption: '🍗 Nos poulets fermiers élevés en plein air arrivent frais chaque matin ! Parfait pour un repas familial de qualité. Commandez maintenant et profitez de notre offre spéciale !',
-      metrics: {
-        likes: 892,
-        comments: 67,
-        shares: 34,
-        impressions: 6200,
-        reach: 4950,
-        engagement: 993,
-        engagementRate: 16.0,
-        saves: 45,
-        clicks: 156
-      },
-      lastUpdated: new Date()
-    },
-    {
-      postId: 'post-3',
-      platform: 'instagram' as SocialPlatform,
-      publishedAt: new Date(period.start.getTime() + Math.random() * (period.end.getTime() - period.start.getTime())),
-      image: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=400&fit=crop',
-      caption: '🥓 Bacon artisanal fumé au bois de hêtre - Une saveur incomparable ! Nos charcuteries sont préparées selon les méthodes traditionnelles. Disponible en magasin et en ligne.',
-      metrics: {
-        likes: 756,
-        comments: 43,
-        shares: 28,
-        impressions: 4800,
-        reach: 3840,
-        engagement: 827,
-        engagementRate: 17.2,
-        saves: 38,
-        clicks: 98
-      },
-      lastUpdated: new Date()
-    },
-    {
-      postId: 'post-4',
-      platform: 'facebook' as SocialPlatform,
-      publishedAt: new Date(period.start.getTime() + Math.random() * (period.end.getTime() - period.start.getTime())),
-      image: 'https://images.unsplash.com/photo-1574781330855-d0f35f2e55ed?w=400&h=400&fit=crop',
-      caption: '🐟 Poisson frais du jour ! Saumon, cabillaud, dorade... Tous nos poissons sont sélectionnés avec soin pour leur fraîcheur. Idéal pour un dîner sain et savoureux.',
-      metrics: {
-        likes: 634,
-        comments: 52,
-        shares: 31,
-        impressions: 4200,
-        reach: 3360,
-        engagement: 717,
-        engagementRate: 17.1,
-        saves: 42,
-        clicks: 87
-      },
-      lastUpdated: new Date()
-    },
-    {
-      postId: 'post-5',
-      platform: 'instagram' as SocialPlatform,
-      publishedAt: new Date(period.start.getTime() + Math.random() * (period.end.getTime() - period.start.getTime())),
-      image: 'https://images.unsplash.com/photo-1588347818501-0d0b0b0b0b0b?w=400&h=400&fit=crop',
-      caption: '🍖 Côte de bœuf maturée 28 jours - Un délice pour les amateurs de viande ! Accompagnée de nos légumes de saison. Réservez votre table pour ce weekend.',
-      metrics: {
-        likes: 1123,
-        comments: 78,
-        shares: 41,
-        impressions: 7200,
-        reach: 5760,
-        engagement: 1242,
-        engagementRate: 17.3,
-        saves: 58,
-        clicks: 189
-      },
-      lastUpdated: new Date()
-    }
-  ];
-
-  const topPosts = boucheriePosts;
-
-  // Performance par type de contenu
-  const contentTypePerformance = [
-    { type: 'Image simple', avgEngagement: Math.random() * 200 + 100, count: 15 },
-    { type: 'Carousel', avgEngagement: Math.random() * 300 + 200, count: 8 },
-    { type: 'Reel', avgEngagement: Math.random() * 500 + 300, count: 12 },
-    { type: 'Story', avgEngagement: Math.random() * 150 + 50, count: 25 }
-  ];
-
-  // Meilleurs moments
-  const bestTimes = Array.from({ length: 20 }, () => ({
-    day: Math.floor(Math.random() * 7),
-    hour: Math.floor(Math.random() * 24),
-    avgEngagement: Math.random() * 200 + 50
-  }));
-
-  return {
-    totalLikes,
-    totalComments,
-    totalShares,
-    totalImpressions,
-    totalReach,
-    avgEngagementRate,
-    bestPerformingPlatform: platforms[0],
-    bestPerformingPost: topPosts[0],
-    dailyEngagement,
-    platformPerformance,
-    topPosts,
-    contentTypePerformance,
-    bestTimes
-  };
-};
-
-export function useAnalytics(filters: AnalyticsFilters) {
-  const [data, setData] = useState<AnalyticsSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    
+  // Charger tous les analytics
+  const loadAnalytics = useCallback(async () => {
     try {
-      // TODO: Remplacer par Ayrshare API
-      // Endpoint: GET /api/analytics/post?id=XXX
-      // Documentation: https://docs.ayrshare.com/rest-api/endpoints/analytics
+      setLoading(true);
+      setError(null);
       
-      const fetchRealAnalytics = async () => {
-        // const response = await fetch(`https://app.ayrshare.com/api/analytics/post?id=${postId}`, {
-        //   headers: { 'Authorization': `Bearer ${AYRSHARE_API_KEY}` }
-        // });
-        // return response.json();
-      };
-
-      // Simulation du délai API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const allAnalytics = await AnalyticsService.getFilteredAnalytics(filters);
+      setAnalytics(allAnalytics);
       
-      const mockData = generateMockAnalytics(filters.period, filters.platforms);
-      setData(mockData);
-      setLastRefresh(new Date());
-    } catch (error) {
-      console.error('Erreur lors du chargement des analytics:', error);
+      // Charger le résumé
+      const analyticsSummary = await AnalyticsService.getAnalyticsSummary();
+      setSummary(analyticsSummary);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des analytics');
+      console.error('Erreur useAnalytics.loadAnalytics:', err);
     } finally {
       setLoading(false);
     }
-  }, [filters.period, filters.platforms]);
+  }, [filters]);
 
-  const refresh = useCallback(() => {
-    const now = new Date();
-    if (lastRefresh && now.getTime() - lastRefresh.getTime() < 10 * 60 * 1000) {
-      // Rate limit: 10 minutes minimum entre les refresh
-      return;
+  // Sauvegarder les analytics d'un post
+  const savePostAnalytics = useCallback(async (analytics: PostAnalytics): Promise<boolean> => {
+    try {
+      setError(null);
+      const success = await AnalyticsService.savePostAnalytics(analytics);
+      
+      if (success) {
+        await loadAnalytics(); // Recharger la liste
+      }
+      
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      console.error('Erreur useAnalytics.savePostAnalytics:', err);
+      return false;
     }
-    fetchData();
-  }, [fetchData, lastRefresh]);
+  }, [loadAnalytics]);
 
+  // Récupérer les analytics d'un post
+  const getPostAnalytics = useCallback(async (postId: string): Promise<PostAnalytics | null> => {
+    try {
+      setError(null);
+      return await AnalyticsService.getPostAnalytics(postId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la récupération');
+      console.error('Erreur useAnalytics.getPostAnalytics:', err);
+      return null;
+    }
+  }, []);
+
+  // Générer des données mock
+  const generateMockData = useCallback(async () => {
+    try {
+      setError(null);
+      await AnalyticsService.generateMockData();
+      await loadAnalytics(); // Recharger la liste
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la génération des données mock');
+      console.error('Erreur useAnalytics.generateMockData:', err);
+    }
+  }, [loadAnalytics]);
+
+  // Exporter les analytics
+  const exportAnalytics = useCallback(async (): Promise<string> => {
+    try {
+      setError(null);
+      return await AnalyticsService.exportAnalytics();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'export');
+      console.error('Erreur useAnalytics.exportAnalytics:', err);
+      return '';
+    }
+  }, []);
+
+  // Importer les analytics
+  const importAnalytics = useCallback(async (jsonData: string): Promise<boolean> => {
+    try {
+      setError(null);
+      const success = await AnalyticsService.importAnalytics(jsonData);
+      
+      if (success) {
+        await loadAnalytics(); // Recharger la liste
+      }
+      
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'import');
+      console.error('Erreur useAnalytics.importAnalytics:', err);
+      return false;
+    }
+  }, [loadAnalytics]);
+
+  // Calculer les métriques agrégées
+  const calculateAggregatedMetrics = useCallback(async (analytics: PostAnalytics[]) => {
+    try {
+      return await AnalyticsService.calculateAggregatedMetrics(analytics);
+    } catch (err) {
+      console.error('Erreur useAnalytics.calculateAggregatedMetrics:', err);
+      return {
+        totalEngagement: 0,
+        totalImpressions: 0,
+        totalReach: 0,
+        averageEngagementRate: 0,
+        totalPosts: 0,
+        topPerformingPost: null
+      };
+    }
+  }, []);
+
+  // Récupérer les analytics pour une période
+  const getAnalyticsForPeriod = useCallback(async (period: AnalyticsPeriod): Promise<PostAnalytics[]> => {
+    try {
+      return await AnalyticsService.getAnalyticsForPeriod(period);
+    } catch (err) {
+      console.error('Erreur useAnalytics.getAnalyticsForPeriod:', err);
+      return [];
+    }
+  }, []);
+
+  // Récupérer les analytics par plateforme
+  const getAnalyticsByPlatform = useCallback(async (platform: string): Promise<PostAnalytics[]> => {
+    try {
+      return await AnalyticsService.getAnalyticsByPlatform(platform);
+    } catch (err) {
+      console.error('Erreur useAnalytics.getAnalyticsByPlatform:', err);
+      return [];
+    }
+  }, []);
+
+  // Récupérer les analytics par compte
+  const getAnalyticsByAccount = useCallback(async (accountId: string): Promise<PostAnalytics[]> => {
+    try {
+      return await AnalyticsService.getAnalyticsByAccount(accountId);
+    } catch (err) {
+      console.error('Erreur useAnalytics.getAnalyticsByAccount:', err);
+      return [];
+    }
+  }, []);
+
+  // Obtenir les périodes prédéfinies
+  const getPredefinedPeriods = useCallback((): AnalyticsPeriod[] => {
+    return AnalyticsService.getPredefinedPeriods();
+  }, []);
+
+  // Actualiser le résumé
+  const refreshSummary = useCallback(async () => {
+    try {
+      const analyticsSummary = await AnalyticsService.getAnalyticsSummary();
+      setSummary(analyticsSummary);
+    } catch (err) {
+      console.error('Erreur useAnalytics.refreshSummary:', err);
+    }
+  }, []);
+
+  // Mettre à jour les filtres
+  const updateFilters = useCallback((newFilters: AnalyticsFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Effacer les filtres
+  const clearFilters = useCallback(() => {
+    setFilters({});
+  }, []);
+
+  // Analytics filtrés (calculé)
+  const filteredAnalytics = useMemo(() => {
+    if (Object.keys(filters).length === 0) {
+      return analytics;
+    }
+
+    return analytics.filter(analytic => {
+      // Filtre par date
+      if (filters.dateFrom) {
+        const postDate = new Date(analytic.postDate);
+        if (postDate < filters.dateFrom) return false;
+      }
+      
+      if (filters.dateTo) {
+        const postDate = new Date(analytic.postDate);
+        if (postDate > filters.dateTo) return false;
+      }
+      
+      // Filtre par plateformes
+      if (filters.platforms && filters.platforms.length > 0) {
+        const hasMatchingPlatform = analytic.platforms.some(platform => 
+          filters.platforms!.includes(platform)
+        );
+        if (!hasMatchingPlatform) return false;
+      }
+      
+      // Filtre par comptes
+      if (filters.accounts && filters.accounts.length > 0) {
+        if (!filters.accounts.includes(analytic.accountId)) return false;
+      }
+      
+      return true;
+    });
+  }, [analytics, filters]);
+
+  // Chargement automatique
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (autoLoad) {
+      loadAnalytics();
+    }
+  }, [autoLoad, loadAnalytics]);
+
+  // Recharger quand les filtres changent
+  useEffect(() => {
+    if (autoLoad) {
+      loadAnalytics();
+    }
+  }, [filters, autoLoad, loadAnalytics]);
 
   return {
-    data,
+    // État
+    analytics,
+    summary,
     loading,
-    refresh,
-    lastRefresh,
-    canRefresh: !lastRefresh || new Date().getTime() - lastRefresh.getTime() >= 10 * 60 * 1000
+    error,
+    
+    // Actions
+    loadAnalytics,
+    savePostAnalytics,
+    getPostAnalytics,
+    generateMockData,
+    exportAnalytics,
+    importAnalytics,
+    
+    // Filtrage
+    setFilters: updateFilters,
+    clearFilters,
+    filteredAnalytics,
+    
+    // Métriques
+    calculateAggregatedMetrics,
+    
+    // Utilitaires
+    getAnalyticsForPeriod,
+    getAnalyticsByPlatform,
+    getAnalyticsByAccount,
+    getPredefinedPeriods,
+    refreshSummary
   };
-}
+};
+
+export default useAnalytics;

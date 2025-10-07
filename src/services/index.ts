@@ -4,19 +4,24 @@
  */
 
 // Services de base
+import StorageService from './storage';
 export { default as StorageService } from './storage';
 export type { StorageError, StorageResult } from './storage';
 
 // Services métier
+import PostsService from './posts';
 export { default as PostsService } from './posts';
 export type { PostFilters, PostStats } from './posts';
 
+import UsersService from './users';
 export { default as UsersService } from './users';
 export type { UserFilters, UserStats } from './users';
 
+import SocialAccountsService from './socialAccounts';
 export { default as SocialAccountsService } from './socialAccounts';
 export type { SocialAccountFilters, SocialAccountStats } from './socialAccounts';
 
+import AnalyticsService from './analytics';
 export { default as AnalyticsService } from './analytics';
 export type { AnalyticsFilters, AnalyticsPeriod } from './analytics';
 
