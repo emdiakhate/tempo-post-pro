@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { 
   Menu, 
   X, 
@@ -21,7 +22,8 @@ import {
   Sparkles,
   Instagram,
   Linkedin,
-  Twitter
+  Twitter,
+  Maximize
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -134,8 +136,9 @@ const LandingPage: React.FC = () => {
               <Button 
                 variant="ghost" 
                 className="text-gray-700 hover:text-[#1a4d2e] font-medium"
+                asChild
               >
-                Se connecter
+                <Link to="/login">Se connecter</Link>
               </Button>
               <Button 
                 className="bg-[#1a4d2e] hover:bg-[#2d5f4a] text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all"
@@ -178,8 +181,9 @@ const LandingPage: React.FC = () => {
                   <Button 
                     variant="ghost" 
                     className="text-gray-700 hover:text-[#1a4d2e] font-medium justify-start"
+                    asChild
                   >
-                    Se connecter
+                    <Link to="/login">Se connecter</Link>
                   </Button>
                   <Button 
                     className="bg-[#1a4d2e] hover:bg-[#2d5f4a] text-white font-semibold px-6 py-2 rounded-lg"
@@ -240,9 +244,12 @@ const LandingPage: React.FC = () => {
                 <Button 
                   size="lg" 
                   className="bg-white text-green-900 px-8 py-4 rounded-lg font-semibold hover:bg-green-50 hover:scale-105 shadow-xl transition-all duration-300"
+                  asChild
                 >
-                  Démarrer gratuitement
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  <Link to="/login">
+                    Démarrer gratuitement
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
                 </Button>
                 <Button 
                   size="lg" 
@@ -403,60 +410,133 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Trust Badges Section */}
-      <motion.section 
-        className="py-16 bg-gray-50"
-        initial={{ opacity: 0, y: 60 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-12"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              #1 Meilleur Logiciel 2024
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Reconnu par les professionnels du marketing digital
-            </p>
-          </motion.div>
+      {/* Défilement Logos Réseaux Sociaux */}
+      <section className="relative bg-white py-12 overflow-hidden border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Texte au-dessus */}
+          <p className="text-center text-sm text-gray-500 mb-8">
+            Publiez sur toutes les plateformes depuis un seul endroit
+          </p>
 
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            {[
-              { name: 'Atlassian', width: 'w-24' },
-              { name: 'HP', width: 'w-16' },
-              { name: 'UNICEF', width: 'w-20' },
-              { name: 'Microsoft', width: 'w-24' },
-              { name: 'Salesforce', width: 'w-28' },
-              { name: 'Adobe', width: 'w-20' }
-            ].map((partner, index) => (
-              <motion.div
-                key={partner.name}
-                className={`${partner.width} h-12 bg-gray-300 rounded flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-300`}
-                whileHover={{ scale: 1.05 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 0.6, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <span className="text-xs font-medium text-gray-600">{partner.name}</span>
-              </motion.div>
-            ))}
-          </motion.div>
+          {/* Container du défilement */}
+          <div className="relative">
+            {/* Gradient fade gauche */}
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
+            
+            {/* Gradient fade droite */}
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
+
+            {/* Défilement infini */}
+            <div className="flex gap-12 animate-scroll">
+              {/* Premier set de logos */}
+              <div className="flex gap-12 items-center shrink-0">
+                {/* Instagram */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Instagram className="w-8 h-8 text-pink-500" />
+                  <span className="text-lg font-semibold text-gray-700">Instagram</span>
+                </div>
+
+                {/* Facebook */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">Facebook</span>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Linkedin className="w-8 h-8 text-blue-700" />
+                  <span className="text-lg font-semibold text-gray-700">LinkedIn</span>
+                </div>
+
+                {/* X/Twitter */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Twitter className="w-8 h-8 text-black" />
+                  <span className="text-lg font-semibold text-gray-700">X</span>
+                </div>
+
+                {/* TikTok */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">TikTok</span>
+                </div>
+
+                {/* YouTube */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">YouTube</span>
+                </div>
+
+                {/* Pinterest */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">Pinterest</span>
+                </div>
+              </div>
+
+              {/* Dupliquer le set pour défilement infini */}
+              <div className="flex gap-12 items-center shrink-0" aria-hidden="true">
+                {/* Instagram */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Instagram className="w-8 h-8 text-pink-500" />
+                  <span className="text-lg font-semibold text-gray-700">Instagram</span>
+                </div>
+
+                {/* Facebook */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">Facebook</span>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Linkedin className="w-8 h-8 text-blue-700" />
+                  <span className="text-lg font-semibold text-gray-700">LinkedIn</span>
+                </div>
+
+                {/* X/Twitter */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <Twitter className="w-8 h-8 text-black" />
+                  <span className="text-lg font-semibold text-gray-700">X</span>
+                </div>
+
+                {/* TikTok */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">TikTok</span>
+                </div>
+
+                {/* YouTube */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">YouTube</span>
+                </div>
+
+                {/* Pinterest */}
+                <div className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <svg className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                  </svg>
+                  <span className="text-lg font-semibold text-gray-700">Pinterest</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Features Section */}
       <section id="features" className="py-24 bg-white">
@@ -526,28 +606,363 @@ const LandingPage: React.FC = () => {
             ].map((feature, index) => (
               <motion.div
                 key={feature.title}
-                className="p-6 rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-white"
+                className={cn(
+                  "group relative p-8 bg-white border-2 border-gray-200 rounded-2xl",
+                  "transition-all duration-300 ease-in-out",
+                  "hover:border-[#1a4d2e] hover:shadow-2xl hover:scale-105",
+                  "hover:bg-gradient-to-br hover:from-[#e8f5e9] hover:to-white"
+                )}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -4 }}
               >
-                <div className={`${feature.iconBg} rounded-lg p-3 w-fit mb-4`}>
+                {/* Icône avec effet */}
+                <div className={cn(
+                  "w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all",
+                  feature.iconBg,
+                  "group-hover:bg-[#1a4d2e] group-hover:text-white group-hover:scale-110"
+                )}>
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 mb-4">{feature.description}</p>
-                <ul className="space-y-1">
+
+                {/* Titre avec effet */}
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#1a4d2e] transition-colors">
+                  {feature.title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-gray-600 mb-4 group-hover:text-gray-700">
+                  {feature.description}
+                </p>
+
+                {/* Liste avec checkmarks verts au hover */}
+                <ul className="space-y-2">
                   {feature.features.map((item, idx) => (
-                    <li key={idx} className="text-sm text-gray-500 flex items-center">
-                      <span className="text-[#1a4d2e] mr-2">•</span>
-                      {item}
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 group-hover:text-gray-700">
+                      <CheckCircle className="w-4 h-4 text-green-500 group-hover:text-[#1a4d2e] mt-0.5 flex-shrink-0 transition-colors" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
+
+                {/* Badge "En savoir plus" qui apparaît au hover */}
+                <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArrowRight className="w-5 h-5 text-[#1a4d2e]" />
+                </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Video Section */}
+      <section className="py-24 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-1 bg-[#e8f5e9] text-[#1a4d2e] rounded-full text-sm font-semibold mb-4">
+              Démo en direct
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Découvrez Postelma en action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Voyez comment notre plateforme simplifie la gestion de vos réseaux sociaux 
+              en quelques minutes
+            </p>
+          </div>
+
+          {/* Video Container */}
+          <div className="relative max-w-6xl mx-auto">
+            {/* Shadow effect */}
+            <div className="absolute inset-0 bg-[#1a4d2e]/10 blur-3xl rounded-3xl transform scale-95" />
+            
+            {/* Video wrapper */}
+            <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-white">
+              {/* Video aspect ratio container */}
+              <div className="relative aspect-video bg-gray-900">
+                {/* Placeholder avant chargement vidéo */}
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1a4d2e] to-[#2d5f4a]">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 hover:bg-white/30 transition-all cursor-pointer group">
+                      <Play className="w-10 h-10 text-white ml-1 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <p className="text-white text-lg font-semibold">
+                      Voir la démo (2:30)
+                    </p>
+                  </div>
+                </div>
+
+                {/* iframe YouTube/Vimeo (à activer au clic) */}
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/VIDEO_ID?autoplay=0&controls=1&rel=0"
+                  title="Démo Postelma"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Video controls overlay (optionnel) */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">
+                <div className="flex items-center justify-between text-white">
+                  <div className="flex items-center gap-4">
+                    <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all">
+                      <Play className="w-5 h-5" />
+                    </button>
+                    <span className="text-sm font-medium">0:00 / 2:30</span>
+                  </div>
+                  <button className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all">
+                    <Maximize className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating elements */}
+            <div className="absolute -left-8 top-1/4 bg-white rounded-lg shadow-xl p-4 hidden lg:block">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-[#1a4d2e]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Facile à utiliser</p>
+                  <p className="text-xs text-gray-600">Interface intuitive</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute -right-8 bottom-1/4 bg-white rounded-lg shadow-xl p-4 hidden lg:block">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Gain de temps</p>
+                  <p className="text-xs text-gray-600">3x plus rapide</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA sous la vidéo */}
+          <div className="text-center mt-12">
+            <p className="text-gray-600 mb-4">
+              Convaincu ? Essayez gratuitement pendant 14 jours
+            </p>
+            <Button 
+              className="bg-[#1a4d2e] hover:bg-[#2d5f4a] text-white px-8 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all"
+              asChild
+            >
+              <Link to="/login">
+                Démarrer gratuitement
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-1 bg-[#e8f5e9] text-[#1a4d2e] rounded-full text-sm font-semibold mb-4">
+              Témoignages
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Ils nous font confiance
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Découvrez comment Postelma a transformé la gestion des réseaux sociaux 
+              de centaines d'entreprises
+            </p>
+          </div>
+
+          {/* Grid de testimonials (3 colonnes) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Testimonial 1 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              {/* Rating */}
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              {/* Quote */}
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "Postelma a complètement transformé notre stratégie social media. 
+                On gagne 10h par semaine et nos résultats ont doublé !"
+              </p>
+
+              {/* Author */}
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=1"
+                  alt="Sophie Martin"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Sophie Martin</p>
+                  <p className="text-sm text-gray-600">CEO, Digital Agency</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "L'IA de génération de contenu est bluffante. On crée des posts 
+                engageants en quelques secondes. Un gain de temps incroyable !"
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=12"
+                  alt="Thomas Dubois"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Thomas Dubois</p>
+                  <p className="text-sm text-gray-600">Marketing Manager, E-commerce</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "Meilleur outil de social media management qu'on ait testé. 
+                L'interface est intuitive et les analytics super détaillés."
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=27"
+                  alt="Marie Lefevre"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Marie Lefevre</p>
+                  <p className="text-sm text-gray-600">Social Media Manager, SaaS</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 4 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "La fonctionnalité de lead generation est un game changer. 
+                On a trouvé 50+ prospects qualifiés en une semaine."
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=33"
+                  alt="Julien Bernard"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Julien Bernard</p>
+                  <p className="text-sm text-gray-600">Founder, Startup B2B</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 5 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "Le support client est exceptionnel. Réponse en moins de 2h 
+                et solutions toujours pertinentes. Bravo !"
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=45"
+                  alt="Laura Chen"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Laura Chen</p>
+                  <p className="text-sm text-gray-600">Content Creator, Influencer</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 6 */}
+            <div className="bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-[#1a4d2e] hover:shadow-xl transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">
+                "On a multiplié notre engagement par 3 en utilisant les recommandations 
+                de best time to post. Impressionnant !"
+              </p>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src="https://i.pravatar.cc/150?img=52"
+                  alt="Marc Dubois"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-gray-900">Marc Dubois</p>
+                  <p className="text-sm text-gray-600">CMO, Retail Brand</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats sous les testimonials */}
+          <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            <div>
+              <p className="text-4xl font-bold text-[#1a4d2e] mb-2">500+</p>
+              <p className="text-gray-600">Entreprises clientes</p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-[#1a4d2e] mb-2">4.9/5</p>
+              <p className="text-gray-600">Note moyenne</p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-[#1a4d2e] mb-2">50K+</p>
+              <p className="text-gray-600">Posts publiés/mois</p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-[#1a4d2e] mb-2">98%</p>
+              <p className="text-gray-600">Taux de satisfaction</p>
+            </div>
           </div>
         </div>
       </section>
@@ -831,9 +1246,12 @@ const LandingPage: React.FC = () => {
               <Button 
                 size="lg" 
                 className="bg-white text-[#1a4d2e] hover:bg-gray-50 px-8 py-4 text-lg rounded-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                asChild
               >
-                Démarrer gratuitement
-                <ArrowRight className="ml-2 w-4 h-4" />
+                <Link to="/login">
+                  Démarrer gratuitement
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
               </Button>
             </motion.div>
             <p className="text-sm text-white/80">
