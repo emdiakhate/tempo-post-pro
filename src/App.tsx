@@ -21,6 +21,7 @@ import SocialAccountsPage from "./pages/SocialAccountsPage";
 import LeadsPage from "./pages/LeadsPage";
 import PublicationsPage from "./pages/PublicationsPage";
 import SettingsPage from "./pages/SettingsPage";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +54,8 @@ function MainLayout() {
 const ProtectedRoutes = () => {
   return (
     <Routes>
-      {/* Route publique */}
+      {/* Routes publiques */}
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       
       {/* Route de déconnexion - SANS Layout */}
