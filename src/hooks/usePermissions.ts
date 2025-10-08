@@ -42,6 +42,7 @@ export const usePermissions = () => {
     hasPermission,
     canAccess,
     currentUser,
+    isAdmin: currentUser?.role === 'owner' || currentUser?.role === 'manager',
   };
 };
 

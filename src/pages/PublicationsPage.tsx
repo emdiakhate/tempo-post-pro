@@ -320,7 +320,7 @@ export default function PublicationsPage() {
             {/* Filtre Statut */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Statut:</span>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as PostStatus | 'all')}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -351,7 +351,7 @@ export default function PublicationsPage() {
             {/* Tri */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Trier par:</span>
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortBy)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue />
                 </SelectTrigger>

@@ -6,45 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Crown, Shield, Pencil, Eye, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { mockUsers as allMockUsers } from '@/data/mockUsers';
 import type { User, UserRole } from '@/types/user';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Récupérer les utilisateurs mockés de chaque rôle
   const mockUsers = {
-    owner: {
-      id: 'user-owner-1',
-      name: 'Marie Dupont',
-      email: 'marie@postelma.com',
-      role: 'owner' as const,
-      avatar: '👩‍💼',
-      company: 'Postelma SAS'
-    },
-    manager: {
-      id: 'user-manager-1',
-      name: 'Thomas Martin',
-      email: 'thomas@postelma.com',
-      role: 'manager' as const,
-      avatar: '👨‍💼',
-      company: 'Postelma SAS'
-    },
-    creator: {
-      id: 'user-creator-1',
-      name: 'Sophie Bernard',
-      email: 'sophie@postelma.com',
-      role: 'creator' as const,
-      avatar: '👩‍🎨',
-      company: 'Postelma SAS'
-    },
-    viewer: {
-      id: 'user-viewer-1',
-      name: 'Lucas Petit',
-      email: 'lucas@postelma.com',
-      role: 'viewer' as const,
-      avatar: '👨‍💻',
-      company: 'Postelma SAS'
-    }
+    owner: allMockUsers.find(u => u.role === 'owner')!,
+    manager: allMockUsers.find(u => u.role === 'manager')!,
+    creator: allMockUsers.find(u => u.role === 'creator')!,
+    viewer: allMockUsers.find(u => u.role === 'viewer')!,
   };
 
   const handleLogin = (user: User) => {

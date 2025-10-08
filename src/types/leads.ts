@@ -22,6 +22,7 @@ export interface LeadMetrics {
   instagramFollowers?: number;
   facebookLikes?: number;
   linkedinFollowers?: number;
+  twitterFollowers?: number;
 }
 
 export interface Lead {

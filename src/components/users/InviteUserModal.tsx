@@ -169,7 +169,7 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
             </Label>
             <Select
               value={formData.role}
-              onValueChange={(value: UserRole) => setFormData(prev => ({ ...prev, role: value }))}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
               disabled={isSubmitting}
             >
               <SelectTrigger>
@@ -181,9 +181,9 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <Badge 
                         variant="outline" 
-                        className={cn("text-xs", getRoleColor(role))}
+                        className={cn("text-xs", getRoleColor(role as UserRole))}
                       >
-                        {getRoleLabel(role)}
+                        {getRoleLabel(role as UserRole)}
                       </Badge>
                     </div>
                   </SelectItem>

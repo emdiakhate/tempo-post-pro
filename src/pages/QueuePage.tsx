@@ -28,7 +28,7 @@ const mockPendingPosts = [
     createdAt: '2025-10-02T10:30:00',
     scheduledDate: '2025-10-05T14:00:00',
     platforms: ['facebook', 'instagram', 'linkedin'],
-    status: 'pending'
+    status: 'pending' as const
   },
   {
     id: '2',
@@ -38,7 +38,7 @@ const mockPendingPosts = [
     createdAt: '2025-10-02T11:15:00',
     scheduledDate: '2025-10-06T10:00:00',
     platforms: ['twitter', 'facebook'],
-    status: 'pending'
+    status: 'pending' as const
   },
   {
     id: '3',
@@ -48,17 +48,17 @@ const mockPendingPosts = [
     createdAt: '2025-10-02T14:20:00',
     scheduledDate: '2025-10-07T09:00:00',
     platforms: ['linkedin', 'twitter'],
-    status: 'pending'
+    status: 'approved' as const
   },
   {
     id: '4',
-    content: 'Rejoignez notre équipe ! Nous recherchons des talents créatifs pour développer nos projets.',
-    image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
+    content: 'Rejoignez notre webinar gratuit sur les stratégies de marketing digital moderne. Places limitées !',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
     author: 'Pierre Moreau',
     createdAt: '2025-10-02T16:45:00',
-    scheduledDate: '2025-10-08T11:30:00',
+    scheduledDate: '2025-10-08T11:00:00',
     platforms: ['linkedin', 'facebook'],
-    status: 'pending'
+    status: 'pending' as const
   },
   {
     id: '5',
@@ -68,7 +68,7 @@ const mockPendingPosts = [
     createdAt: '2025-10-03T08:30:00',
     scheduledDate: '2025-10-09T15:00:00',
     platforms: ['instagram', 'facebook'],
-    status: 'pending'
+    status: 'pending' as const
   }
 ];
 

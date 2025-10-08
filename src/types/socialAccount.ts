@@ -25,6 +25,12 @@ export interface SocialAccount {
   profileKey?: string; // Pour Ayrshare plus tard
   status: 'connected' | 'reconnect_needed' | 'disconnected';
   internalName?: string; // Alias interne pour l'utilisateur
+  permissions?: {
+    readProfile: boolean;
+    readPosts: boolean;
+    publishPosts: boolean;
+    readAnalytics: boolean;
+  };
 }
 
 export interface ConnectionStatus {

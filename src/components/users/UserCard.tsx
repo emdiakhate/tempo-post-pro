@@ -177,11 +177,11 @@ const UserCard: React.FC<UserCardProps> = ({
                     .map(role => (
                       <DropdownMenuItem 
                         key={role}
-                        onClick={() => onRoleChange?.(user.id, role)}
-                        disabled={!canChangeRole(role, user.id)}
+                        onClick={() => onRoleChange?.(user.id, role as UserRole)}
+                        disabled={!canChangeRole(role as UserRole, user.id)}
                       >
                         <Shield className="w-4 h-4 mr-2" />
-                        Changer en {getRoleLabel(role)}
+                        Changer en {getRoleLabel(role as UserRole)}
                       </DropdownMenuItem>
                     ))}
                 </>

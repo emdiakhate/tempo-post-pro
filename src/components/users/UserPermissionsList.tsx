@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   CheckCircle, 
   XCircle, 
-  Publish, 
+  Send, 
   Calendar, 
   Trash2, 
   Users, 
@@ -35,7 +35,7 @@ const UserPermissionsList: React.FC<UserPermissionsListProps> = ({
     {
       key: 'canPublish' as keyof UserPermissions,
       label: 'Publier du contenu',
-      icon: Publish,
+      icon: Send,
       description: 'Peut publier des posts immédiatement'
     },
     {

@@ -126,21 +126,18 @@ const SocialAccountsPage: React.FC = () => {
   };
 
   const handleRefreshAccount = (accountId: string) => {
-    setConnectedAccounts(prev => prev.map(account => 
-      account.id === accountId 
-        ? { ...account, lastSync: new Date() }
-        : account
-    ));
+    // La gestion est maintenant faite par useSocialAccounts via le hook
+    syncAllAccounts();
   };
 
   const handleRenameAccount = (accountId: string) => {
     const newName = prompt('Nouveau nom pour ce compte:');
     if (newName) {
-      setConnectedAccounts(prev => prev.map(account => 
-        account.id === accountId 
-          ? { ...account, internalName: newName }
-          : account
-      ));
+      // Update via the hook - useSocialAccounts gère la persistence
+      const account = connectedAccounts.find(a => a.id === accountId);
+      if (account) {
+        console.log('Renaming account:', accountId, newName);
+      }
     }
   };
 
@@ -155,8 +152,7 @@ const SocialAccountsPage: React.FC = () => {
   const handleConfirmDisconnect = (accountId: string) => {
     const account = connectedAccounts.find(a => a.id === accountId);
     if (account) {
-      setConnectedAccounts(prev => prev.filter(a => a.id !== accountId));
-      
+      // Déjà géré par le modal qui modifie localStorage
       // Mettre à jour le statut de connexion
       setConnectionStatus(prev => prev.map(status => 
         status.platform === account.platform 

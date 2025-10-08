@@ -3,7 +3,7 @@
  * Phase 2: Gestion Multi-Comptes Sociaux
  */
 
-import { SocialAccount } from '@/types/socialAccount';
+import { SocialAccount, SocialPlatform } from '@/types/socialAccount';
 
 // Données mock réalistes pour différents types de comptes
 export const MOCK_SOCIAL_ACCOUNTS: SocialAccount[] = [
@@ -168,15 +168,15 @@ export const INDUSTRY_RECOMMENDATIONS = {
 // Fonction pour obtenir des recommandations basées sur les comptes connectés
 export const getRecommendations = (connectedAccounts: SocialAccount[], industry?: string) => {
   const connectedPlatforms = connectedAccounts.map(acc => acc.platform);
-  const allPlatforms = ['instagram', 'facebook', 'linkedin', 'twitter', 'tiktok', 'youtube', 'pinterest'];
-  const missingPlatforms = allPlatforms.filter(platform => !connectedPlatforms.includes(platform));
+  const allPlatforms: SocialPlatform[] = ['instagram', 'facebook', 'linkedin', 'twitter', 'tiktok', 'youtube', 'pinterest'];
+  const missingPlatforms = allPlatforms.filter(platform => !connectedPlatforms.includes(platform as SocialPlatform));
   
   const recommendations = [];
   
   // Recommandations basées sur l'industrie
   if (industry && INDUSTRY_RECOMMENDATIONS[industry as keyof typeof INDUSTRY_RECOMMENDATIONS]) {
     const industryData = INDUSTRY_RECOMMENDATIONS[industry as keyof typeof INDUSTRY_RECOMMENDATIONS];
-    const missingIndustryPlatforms = industryData.platforms.filter(platform => !connectedPlatforms.includes(platform));
+    const missingIndustryPlatforms = industryData.platforms.filter(platform => !connectedPlatforms.includes(platform as SocialPlatform));
     
     missingIndustryPlatforms.forEach(platform => {
       recommendations.push({

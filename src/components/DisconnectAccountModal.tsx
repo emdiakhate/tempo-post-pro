@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { SocialAccount, PLATFORM_CONFIG } from '@/types/socialAccount';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
